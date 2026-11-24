@@ -4,6 +4,11 @@
 数据源（全部公开、免 key）：
   FRED  fredgraph.csv  WALCL / WTREGEN / RRPONTSYD / BAMLH0A0HYM2 / VIXCLS / SP500 / NASDAQ100 / NFCI
   CFTC  publicreporting.cftc.gov  金融期货持仓 TFF（E-mini S&P 500 13874A、Nasdaq Mini 209742）
+  FRED  SOFR / IORB / IOER（日度）→ 资金市场利差 SOFR − IORB
+  FINRA cdn.finra.org  每日卖空成交量（CNMS 合并文件）→ SPY / QQQ 场外成交卖空占比（类 DIX）
+
+FINRA 的日度文件很多（2018 年 8 月起约 2,000 个），首次运行一次性下载后保存在
+data/finra_short_daily.csv，之后每次只补最近缺的交易日（并重查最近 5 个交易日）。
 
 做法：每次从 2018-01-01 起整段重取、重算。FRED 会修订历史（NFCI 每周都会修订），
 整段重取保证与源头最新版本一致；旧版本留在 git 历史里可回溯。
@@ -20,7 +25,8 @@ import io
 import json
 import sys
 import time
-from datetime import datetime, timezone
+from concurrent.futures import ThreadPoolExecutor
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import requests
@@ -31,6 +37,9 @@ F_LIQ = DATA / "liquidity_weekly.csv"
 F_COT = DATA / "cot_equity_index.csv"
 F_DASH = DATA / "dashboard_data.json"
 F_LATEST = DATA / "latest.json"
+F_FINRA = DATA / "finra_short_daily.csv"
+FINRA_START = date(2018, 8, 1)
+FINRA_SYMS = ["SPY", "QQQ"]
 
 START = "2018-01-01"
 UA = {"User-Agent": "Mozilla/5.0 (USLiquidity weekly report; GitHub Actions)"}
@@ -146,6 +155,87 @@ def build_cot() -> list[list[str]]:
              pct(by["nq"].get(d), "asset_mgr"), pct(by["nq"].get(d), "lev_money")] for d in dates]
 
 
+def fred_daily(code: str, start: str = "2018-03-01") -> dict[str, float]:
+    return dict(parse_fred(get("https://fred.stlouisfed.org/graph/fredgraph.csv", {"id": code, "cosd": start}).text))
+
+
+def funding_spread() -> dict[str, float]:
+    """每日 SOFR − 准备金利率（2021-07-29 起 IORB，之前 IOER），单位基点。"""
+    sofr, iorb, ioer = fred_daily("SOFR"), fred_daily("IORB", "2021-07-01"), fred_daily("IOER")
+    if len(sofr) < 1000 or len(iorb) < 500:
+        raise RuntimeError(f"SOFR/IORB 行数异常：SOFR {len(sofr)}，IORB {len(iorb)}")
+    out = {}
+    for d, v in sofr.items():
+        ref = iorb.get(d) if d >= "2021-07-29" else ioer.get(d)
+        if ref is not None:
+            out[d] = round((v - ref) * 100, 2)
+    return out
+
+
+def finra_day(d: date):
+    """返回 {symbol: (short, total)}；非交易日（文件不存在）返回 None。"""
+    url = f"https://cdn.finra.org/equity/regsho/daily/CNMSshvol{d:%Y%m%d}.txt"
+    err = None
+    for k in range(5):
+        try:
+            r = requests.get(url, headers=UA, timeout=60)
+            if r.status_code in (403, 404):
+                return None
+            if r.status_code == 200:
+                out = {}
+                for line in r.text.splitlines():
+                    p = line.split("|")
+                    if len(p) >= 5 and p[1] in FINRA_SYMS:
+                        out[p[1]] = (float(p[2]), float(p[4]))
+                if set(out) != set(FINRA_SYMS):
+                    raise RuntimeError(f"FINRA {d} 缺少 {set(FINRA_SYMS) - set(out)}")
+                return out
+            err = f"HTTP {r.status_code}"
+        except requests.RequestException as e:
+            err = str(e)
+        time.sleep(3 * (k + 1))
+    raise RuntimeError(f"FINRA {d} 取数失败：{err}")
+
+
+def update_finra() -> list[list[str]]:
+    """增量更新 FINRA 日度表：只下载缺失的交易日，并重查最近 5 个交易日。"""
+    have = {r[0]: r for r in read_csv(F_FINRA)}
+    today = datetime.now(timezone.utc).date()
+    last = max(have) if have else None
+    recheck_from = (date.fromisoformat(last) - timedelta(days=8)) if last else FINRA_START
+    days, d = [], FINRA_START
+    while d <= today:
+        if d.weekday() < 5 and (d.isoformat() not in have or d >= recheck_from):
+            days.append(d)
+        d += timedelta(days=1)
+    log(f"FINRA：需要检查 {len(days)} 个交易日")
+    with ThreadPoolExecutor(max_workers=6) as ex:
+        res = list(ex.map(finra_day, days))
+    for d, v in zip(days, res):
+        if v:
+            have[d.isoformat()] = [d.isoformat()] + [f"{v[s][i]:.0f}" for s in FINRA_SYMS for i in (0, 1)]
+    rows = [have[k] for k in sorted(have)]
+    if len(rows) < 1500:
+        raise RuntimeError(f"FINRA 日度数据只有 {len(rows)} 行，疑似异常")
+    return rows
+
+
+def weekly_join(liq: list[list[str]], spread: dict[str, float], finra: list[list[str]]) -> list[list[str]]:
+    """把日度数据按“截至周三的一周”（周四至周三）汇总，接到流动性表后面。"""
+    fin = {r[0]: [float(x) for x in r[1:]] for r in finra}
+    out = []
+    for r in liq:
+        end = date.fromisoformat(r[0]); start = end - timedelta(days=6)
+        days = [(start + timedelta(days=k)).isoformat() for k in range(7)]
+        sp = [spread[d] for d in days if d in spread]
+        fs = [fin[d] for d in days if d in fin]
+        def dpi(i):
+            sh, tot = sum(x[i] for x in fs), sum(x[i + 1] for x in fs)
+            return f(100 * sh / tot, 1) if tot > 0 else ""
+        out.append(r + [f(sum(sp) / len(sp), 1) if sp else "", f(max(sp), 1) if sp else "", dpi(0) if fs else "", dpi(2) if fs else ""])
+    return out
+
+
 def sanity(liq: list[list[str]], cot: list[list[str]]):
     problems = []
     if len(liq) < 400:
@@ -185,7 +275,9 @@ def write_csv(p: Path, header: list[str], rows: list[list[str]]):
         w.writerows(rows)
 
 
-LIQ_HEADER = ["date", "fed_assets_bn", "tga_bn", "rrp_bn", "net_liq_bn", "hy_oas", "nfci", "vix", "spx", "ndx"]
+LIQ_HEADER = ["date", "fed_assets_bn", "tga_bn", "rrp_bn", "net_liq_bn", "hy_oas", "nfci", "vix", "spx", "ndx",
+              "sofr_iorb_bp", "sofr_iorb_max_bp", "spy_offex_short_pct", "qqq_offex_short_pct"]
+FINRA_HEADER = ["date", "spy_short", "spy_total", "qqq_short", "qqq_total"]
 COT_HEADER = ["date", "es_am_pct", "es_lev_pct", "nq_am_pct", "nq_lev_pct"]
 
 
@@ -194,10 +286,11 @@ def build_outputs(updated: str):
     liq, cot = read_csv(F_LIQ), read_csv(F_COT)
     num = lambda v: None if v == "" else float(v)
     D = {k: [] for k in ["d", "fed", "tga", "rrp", "net", "hy", "nfci", "vix", "spx", "ndx",
+                         "sofr", "sofr_max", "spy_dpi", "qqq_dpi",
                          "cd", "es_am", "es_lev", "nq_am", "nq_lev"]}
     for r in liq:
         D["d"].append(r[0])
-        for k, v in zip(["fed", "tga", "rrp", "net", "hy", "nfci", "vix", "spx", "ndx"], r[1:]):
+        for k, v in zip(["fed", "tga", "rrp", "net", "hy", "nfci", "vix", "spx", "ndx", "sofr", "sofr_max", "spy_dpi", "qqq_dpi"], r[1:]):
             D[k].append(num(v))
     # COT 报告日（通常周二）对齐到当周周三：取 >= 报告日的第一个周三，且相差不超过 6 天
     n = len(D["d"])
@@ -233,6 +326,21 @@ def check_sources():
         except Exception as e:
             ok = False
             log(f"[检查] FRED {code}: 失败 {e}")
+    for code in ["SOFR", "IORB", "IOER"]:
+        try:
+            s = fred_daily(code)
+            last = max(s)
+            log(f"[检查] FRED {code}: {len(s)} 行，最新 {last} = {s[last]}")
+        except Exception as e:
+            ok = False
+            log(f"[检查] FRED {code}: 失败 {e}")
+    for d in [date(2018, 8, 1), date(2021, 3, 1), datetime.now(timezone.utc).date() - timedelta(days=3)]:
+        try:
+            v = finra_day(d)
+            log(f"[检查] FINRA {d}: {v if v else '无文件（非交易日或尚未发布）'}")
+        except Exception as e:
+            ok = False
+            log(f"[检查] FINRA {d}: 失败 {e}")
     for k, c in COT_CODES.items():
         try:
             rows = cftc(c)
@@ -253,9 +361,12 @@ def main():
     try:
         liq, cot = build_liquidity(), build_cot()
         sanity(liq, cot)
+        finra = update_finra()
+        liq = weekly_join(liq, funding_spread(), finra)
     except Exception as e:
         log(f"本次不更新：{e}")
         sys.exit(1)
+    write_csv(F_FINRA, FINRA_HEADER, finra)  # 原始日度数据总是保存（只增不改历史）
     if liq == read_csv(F_LIQ) and cot == read_csv(F_COT) and F_DASH.exists():
         log(f"没有新数据（最新仍是 {liq[-1][0]} / COT {cot[-1][0]}），不改动文件")
         return
