@@ -11,7 +11,7 @@
 
 | 文件 | 内容 |
 |---|---|
-| `index.html` | 报告网页（中英文可切换、一键保存为图片，图表用 d3 绘制） |
+| `index.html` | 报告网页（中英文可切换、“生成图片”可预览并保存 / 复制 / 分享，图表用 d3 绘制） |
 | `bg-market.jpg` | 背景照片（Nicholas Cappello / Unsplash） |
 | `data/liquidity_weekly.csv` | 周度：美联储总资产、TGA、逆回购、净流动性（十亿美元）、HY 利差、NFCI、VIX、标普500、纳指100、SOFR − IORB（周均与单日最高，基点）、SPY / QQQ 场外卖空占比 |
 | `data/finra_short_daily.csv` | 每日：SPY / QQQ 在 FINRA 场外成交中的卖空量与总量（2018-08 起，只增不改；目前只存数据，未在网页展示） |
