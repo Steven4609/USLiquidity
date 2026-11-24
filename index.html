@@ -3,538 +3,523 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#070b12">
 <meta name="robots" content="noindex,nofollow">
-<title>美股流动性与机构仓位报告</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<title>美股流动性与机构仓位跟踪</title>
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <style>
-:root{color-scheme:dark;
---bg:#070b12;--ink:#e9eef6;--soft:#c3ccd9;--mute:#8b97a9;--dim:#5d6878;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);
---net:#36c5c9;--spx:#6ea8ff;--ndx:#b59cff;--fed:#f5a33b;--tga:#ef6f6c;--rrp:#9aa6b8;--hy:#e8c36a;--vix:#ff7fb3;--nfci:#4fc98b;--am:#6ea8ff;--lev:#f2705d;
---red:#f2705d;--orange:#f5a33b;--green:#4fc98b;--dgreen:#2fae70;
---font:Inter,"PingFang SC","Microsoft YaHei","Noto Sans SC","Hiragino Sans GB",system-ui,sans-serif}
-*{box-sizing:border-box;min-width:0}
-html{background:var(--bg)}
-body{margin:0;color:var(--ink);font:15px/1.55 var(--font);font-variant-numeric:tabular-nums;overflow-x:clip;-webkit-font-smoothing:antialiased}
-.bgimg{position:fixed;inset:0;z-index:0;background:url(bg-market.jpg) center/cover no-repeat;opacity:.55;filter:saturate(.95) blur(1.5px);transform:scale(1.02)}
-.bgveil{position:fixed;inset:0;z-index:0;background:radial-gradient(120% 80% at 70% 10%,rgba(7,11,18,.15),rgba(7,11,18,.7) 75%),linear-gradient(180deg,rgba(7,11,18,.3),rgba(7,11,18,.82))}
-main{position:relative;z-index:1;max-width:1240px;margin:0 auto;padding:22px max(3.5vw,14px) 40px}
-.glass{position:relative;isolation:isolate;border-radius:20px;
- background:linear-gradient(150deg,rgba(255,255,255,.085) 0%,rgba(255,255,255,.025) 42%,rgba(255,255,255,.045) 100%);
- backdrop-filter:blur(22px) saturate(175%) brightness(1.05);-webkit-backdrop-filter:blur(22px) saturate(175%) brightness(1.05);
- border:1px solid rgba(255,255,255,.07);
- box-shadow:inset 0 1px 0 rgba(255,255,255,.16),inset 0 -1px 0 rgba(255,255,255,.04),0 18px 50px -12px rgba(0,0,0,.55)}
-.glass::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1px;pointer-events:none;z-index:-1;
- background:linear-gradient(140deg,rgba(255,255,255,.42),rgba(255,255,255,.06) 28%,rgba(255,255,255,0) 55%,rgba(255,255,255,.16) 100%);
- -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
-.glass::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:-1;opacity:var(--glow,0);transition:opacity .35s;
- background:radial-gradient(420px circle at var(--mx,30%) var(--my,0%),rgba(255,255,255,.09),transparent 60%)}
-.glass:hover{--glow:1}
-@media(prefers-reduced-motion:reduce){.glass::after{transition:none}}
-header{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-h1{font-size:clamp(24px,3.2vw,30px);line-height:1.1;margin:0;font-weight:800;letter-spacing:.01em}
-.asof{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;font-size:14px;color:var(--soft)}
-.asof b{color:var(--ink);font-weight:700}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--net);box-shadow:0 0 0 3px rgba(54,197,201,.18)}
-header .grow{flex:1}
-.lede{color:var(--soft);font-size:14.5px;margin:10px 0 20px}
-button{font:inherit;color:var(--ink);cursor:pointer}
-.btn{border:1px solid var(--line2);background:rgba(255,255,255,.05);border-radius:999px;padding:7px 16px;font-size:14px;font-weight:600;min-height:36px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:background .2s}
-.btn:hover{background:rgba(255,255,255,.1)}
-.btn.on{background:#eef2f8;color:#0b1220;border-color:#eef2f8}
-.btn:focus-visible,.chip:focus-within{outline:2px solid var(--spx);outline-offset:2px}
-.langsw{display:inline-flex;padding:3px;border-radius:999px;gap:2px}
-.langsw button{border:0;background:transparent;border-radius:999px;padding:6px 14px;font-size:14px;font-weight:700;color:var(--mute);min-height:32px}
-.langsw button.on{background:#eef2f8;color:#0b1220}
-.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-bottom:22px}
-.card{padding:20px 24px 18px}
-.ch{display:flex;align-items:center;gap:9px;font-weight:700;font-size:15.5px;color:var(--soft)}
-.ch i{width:10px;height:10px;border-radius:3px;flex:none}
-.big{font-size:50px;line-height:1.08;font-weight:800;letter-spacing:-.01em;margin:10px 0 2px;white-space:nowrap}
-.big small{font-size:22px;font-weight:600;color:var(--mute);margin-left:6px}
-.big.red{color:var(--red)}.big.orange{color:var(--orange)}.big.green{color:var(--green)}
-.chg{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 4px}
-.chg span{font-size:13px;font-weight:600;padding:2px 9px;border-radius:999px;background:rgba(255,255,255,.06)}
-.chg .up{color:var(--green)}.chg .dn{color:var(--red)}
-.sub{color:var(--mute);font-size:14px}
-.bar{position:relative;height:7px;border-radius:99px;background:rgba(255,255,255,.08);margin:14px 0 8px}
-.bar>span{position:absolute;left:0;top:0;bottom:0;border-radius:99px}
-.pill{display:inline-block;margin-top:6px;padding:5px 13px;border-radius:999px;font-size:13.5px;font-weight:600;color:var(--soft);background:rgba(255,255,255,.07)}
-.pill.red{color:#ff8f7f;background:rgba(242,112,93,.14)}.pill.orange{color:#ffbf6b;background:rgba(245,163,59,.13)}
-.pill.green{color:#7fe0ad;background:rgba(79,201,139,.13)}
-.panel{padding:20px 24px 16px;margin-bottom:20px}
-.ph{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.ph h2{font-size:19px;font-weight:800;margin:0 6px 0 0}
-.ph .grow{flex:1}
-.seg{display:flex;gap:8px;flex-wrap:wrap}
-.chips{display:flex;gap:8px;flex-wrap:wrap}
-.chip{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;border-radius:999px;border:1px solid var(--line2);background:rgba(255,255,255,.04);font-size:14px;cursor:pointer;min-height:36px;user-select:none}
-.chip.on{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.28);font-weight:700}
-.chip.off{opacity:.45}
-.chip input{width:16px;height:16px;margin:0;accent-color:#5fb3ff}
-.sw{width:9px;height:9px;border-radius:3px;flex:none;display:inline-block}
-.row2{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:12px 0 2px}
-.latest{display:flex;gap:6px 22px;flex-wrap:wrap;font-size:14.5px;color:var(--soft);margin:12px 0 2px}
-.latest b{color:var(--ink);font-weight:700}
-.fig{position:relative;height:300px;margin-top:12px;border-radius:14px;border:1px solid var(--line);background:rgba(8,12,20,.45);touch-action:pan-y;user-select:none;-webkit-user-select:none;overflow:hidden}
-.fig svg{position:absolute;inset:0;width:100%;height:100%}
-.fig text{font:12px var(--font);fill:var(--mute)}
-.cap{color:var(--mute);font-size:13.5px;margin:10px 2px 0;line-height:1.6}
-.reset{position:absolute;top:8px;right:8px;z-index:3;font-size:13px;min-height:30px;padding:4px 12px}
-.tip{position:absolute;z-index:4;pointer-events:none;padding:9px 12px;border-radius:12px;font-size:13px;line-height:1.55;white-space:nowrap;
- background:rgba(18,24,36,.78);backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid var(--line2);box-shadow:0 10px 30px rgba(0,0,0,.45)}
-.tip .d{font-weight:700;color:var(--ink)}
-.tip .r{display:flex;align-items:center;gap:6px;color:var(--soft)}.tip .r b{color:var(--ink);margin-left:auto;padding-left:10px}
-.tip.strip{left:0;right:0;top:0;border-radius:12px 12px 0 0;white-space:normal;font-size:12px;padding:5px 10px;display:flex;flex-wrap:wrap;gap:2px 12px}
-.tip.strip .r b{margin-left:4px;padding:0}
-.body.hide{display:none}
-.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-bottom:20px}
-.stat{padding:18px 24px}
-.stat table{width:100%;border-collapse:collapse;margin-top:8px;font-size:14.5px}
-.stat th{font-weight:600;color:var(--mute);text-align:right;padding:4px 0 6px;font-size:13px}.stat th:first-child{text-align:left}
-.stat td{padding:5px 0;color:var(--soft)}.stat td.n{text-align:right;font-weight:700;color:var(--ink)}.stat td.dt{text-align:right;color:var(--dim)}
-.stat .cap{margin-top:8px}
-.notes{padding:24px 26px 22px;font-size:14px;line-height:1.6;color:var(--soft)}
-.notes h2{font-size:19px;color:var(--ink);margin:0 0 14px;font-weight:800}
-.notes h3{display:flex;align-items:center;gap:8px;font-size:14.5px;color:var(--ink);margin:0 0 8px;font-weight:700}
-.notes h3 i{width:8px;height:8px;border-radius:2px;flex:none}
-.notes b{color:var(--ink);font-weight:600}
-.ngrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-.nb{padding:14px 16px;border-radius:14px;background:rgba(255,255,255,.035);border:1px solid var(--line)}
-.nb ul{margin:0;padding:0;list-style:none}
-.nb li{position:relative;padding-left:14px;margin:5px 0}
-.nb li::before{content:"";position:absolute;left:2px;top:.68em;width:4px;height:4px;border-radius:50%;background:var(--dim)}
-footer{color:var(--dim);font-size:12.5px;text-align:center;margin-top:20px}
-footer a{color:var(--mute)}
-[data-l=en]{display:none}html[lang=en] [data-l=en]{display:block}html[lang=en] [data-l=zh]{display:none}
-@media(max-width:1100px){.ngrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:980px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:640px){
- .cards,.stats,.ngrid{grid-template-columns:minmax(0,1fr)}
- .big{font-size:40px}.card,.panel,.stat{padding:16px 16px 14px}.notes{padding:16px}
- .fig{height:340px}.ph h2{font-size:17px;width:100%}.ph .grow{display:none}
- .btn{padding:6px 12px;font-size:13px}.chip{padding:6px 11px;font-size:13px}
+:root{
+  --color-fg:#1f2328;--color-fg-muted:#5b6470;--color-bg:#ffffff;--color-panel:#f6f7f9;--color-border-line:#e3e6ea;
+  --color-ok:#1a7f4b;--color-bad:#c2372d;
+  --chart-grid:#eceef1;--chart-axis:#d5d9de;--chart-ref:#9aa3ad;--text-secondary:#6b7480;
+  --pop-bg:#ffffff;--pop-border:#dfe3e8;--pop-shadow:0 6px 20px rgba(0,0,0,.12);
+  --c0:#2f6fd6;--c1:#e07b39;--c2:#2e9e6b;--c3:#8a63d2;
+  --serif:"Iowan Old Style","Palatino Linotype","Songti SC","Noto Serif SC",Georgia,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei","Noto Sans SC",Roboto,sans-serif;
+  --gap-xs:4px;--gap-sm:8px;--gap-md:12px;--gap-lg:16px;--gap-xl:28px;--radius:10px;
 }
+@media (prefers-color-scheme:dark){:root{
+  --color-fg:#e8eaed;--color-fg-muted:#9aa3ad;--color-bg:#16181c;--color-panel:#1e2126;--color-border-line:#2e333a;
+  --color-ok:#4cc38a;--color-bad:#f0776c;
+  --chart-grid:#2a2f36;--chart-axis:#3a4049;--chart-ref:#6b7480;--text-secondary:#9aa3ad;
+  --pop-bg:#23272d;--pop-border:#363c44;--pop-shadow:0 6px 20px rgba(0,0,0,.5);
+  --c0:#6ea2f5;--c1:#f0995f;--c2:#4cc38a;--c3:#a98bea;
+}}
+*{box-sizing:border-box}
+html{background:var(--color-bg)}
+body{margin:0;background:var(--color-bg);color:var(--color-fg);font:15px/1.55 var(--sans)}
+.lq{max-width:1100px;margin:0 auto;padding:28px 20px 40px;display:flex;flex-direction:column;gap:var(--gap-xl)}
+.top{display:flex;gap:var(--gap-lg);align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+.top>div:first-child{flex:1 1 520px}
+.lq h1{font-family:var(--serif);font-weight:400;font-size:30px;line-height:1.2;margin:0}
+.lq .take{color:var(--color-fg-muted);margin:var(--gap-sm) 0 0;line-height:1.7}
+.lq .take b{color:var(--color-fg);font-weight:600;font-variant-numeric:tabular-nums}
+.langsw{display:inline-flex;border:1px solid var(--color-border-line);border-radius:999px;padding:3px;gap:2px;background:var(--color-panel)}
+.langsw button{font:inherit;font-size:13px;font-weight:600;border:0;border-radius:999px;padding:5px 14px;background:transparent;color:var(--color-fg-muted);cursor:pointer}
+.langsw button.on{background:var(--color-fg);color:var(--color-bg)}
+.controls{display:flex;gap:var(--gap-lg);flex-wrap:wrap;align-items:center;font-size:13px;color:var(--color-fg-muted)}
+.controls label{display:flex;gap:var(--gap-sm);align-items:center}
+select{font:inherit;font-size:13px;color:var(--color-fg);background-color:var(--color-panel);border:1px solid var(--color-border-line);border-radius:8px;padding:5px 8px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:var(--gap-md)}
+.card{background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:var(--radius);padding:16px}
+.k-label{font-size:13px;color:var(--color-fg-muted)}
+.k-val{font-family:var(--serif);font-weight:400;font-size:30px;line-height:1.2;font-variant-numeric:tabular-nums;margin:var(--gap-xs) 0}
+.k-unit{font-size:13px;color:var(--color-fg-muted);margin-left:4px;font-family:var(--sans)}
+.k-sub{font-size:13px;color:var(--color-fg-muted);font-variant-numeric:tabular-nums;line-height:1.6}
+.good{color:var(--color-ok)}.bad{color:var(--color-bad)}
+.lq h2{font-size:17px;font-weight:600;margin:0 0 var(--gap-xs)}
+.note{font-size:13px;color:var(--color-fg-muted);margin:0 0 var(--gap-sm);line-height:1.6}
+.note b{color:var(--color-fg);font-weight:600;font-variant-numeric:tabular-nums}
+.chart{position:relative;min-height:300px}
+.chart.sm{min-height:240px}
+.tip{position:absolute;pointer-events:none;background:var(--pop-bg);border:1px solid var(--pop-border);box-shadow:var(--pop-shadow);border-radius:6px;padding:6px 8px;font-size:12px;white-space:nowrap;display:none;z-index:2;font-variant-numeric:tabular-nums;color:var(--color-fg)}
+.tip .t-h{font-weight:600;margin-bottom:2px}
+.axis text{fill:var(--text-secondary);font-size:12px}
+.axis path,.axis line{stroke:var(--chart-axis)}
+.grid line{stroke:var(--chart-grid)}
+.legend{display:flex;gap:var(--gap-md);font-size:13px;color:var(--color-fg-muted);flex-wrap:wrap;margin-bottom:var(--gap-xs)}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--gap-lg)}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--color-border-line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--color-fg-muted);font-weight:600}
+details{font-size:13px;color:var(--color-fg-muted);line-height:1.7}
+details summary{cursor:pointer;color:var(--color-fg)}
+details ul{padding-left:18px;margin:var(--gap-sm) 0}
+details b{color:var(--color-fg)}
+.fail{font-size:13px;color:var(--color-bad);padding:12px 0}
+footer{font-size:12px;color:var(--color-fg-muted);border-top:1px solid var(--color-border-line);padding-top:var(--gap-md)}
+[data-l=en]{display:none}html[lang=en] [data-l=en]{display:revert}html[lang=en] [data-l=zh]{display:none}
+@media (max-width:600px){.lq{padding:20px 14px 32px}.lq h1{font-size:25px}}
 </style>
 </head>
 <body>
-<div class="bgimg" aria-hidden="true"></div><div class="bgveil" aria-hidden="true"></div>
-<main>
-<header>
-  <h1 data-i18n="title">美股流动性与机构仓位报告</h1>
-  <span class="asof glass"><span class="dot"></span><span id="asof"></span></span>
-  <span class="grow"></span>
-  <span class="langsw glass" role="group" aria-label="Language / 语言"><button type="button" data-lang="zh">中文</button><button type="button" data-lang="en">English</button></span>
-</header>
-<p class="lede" data-i18n="lede"></p>
+<div class="lq">
+  <header class="top" id="top">
+    <div>
+      <h1 data-i18n="title">美股流动性与机构仓位跟踪</h1>
+      <p class="take" id="take">—</p>
+    </div>
+    <div class="langsw" role="group" aria-label="Language / 语言"><button type="button" data-lang="zh">中文</button><button type="button" data-lang="en">English</button></div>
+  </header>
 
-<section class="cards" id="cards"></section>
-
-<section class="panel glass" data-c="ov">
-  <div class="ph"><h2 data-i18n="ovT"></h2><span class="grow"></span><div class="seg rng"></div><button class="btn col" type="button"></button></div>
-  <div class="body">
-    <div class="row2"><div class="chips" id="ovChecks"></div><div class="seg"><button class="btn" type="button" data-mode="base" data-i18n="mBase"></button><button class="btn" type="button" data-mode="mm" data-i18n="mMM"></button></div></div>
-    <div class="fig"></div>
-    <p class="cap" id="ovCap"></p>
+  <div class="controls" id="controls">
+    <label><span data-i18n="cIdx">对照指数</span> <select id="sel-idx"><option value="spx" data-i18n="nSpx">标普500（SPY）</option><option value="ndx" data-i18n="nNdx">纳斯达克100（QQQ）</option></select></label>
+    <label><span data-i18n="cRange">时间区间</span> <select id="sel-range"><option value="52" data-i18n="r1">近 1 年</option><option value="156" selected data-i18n="r3">近 3 年</option><option value="0" data-i18n="rAll">2018 年至今</option></select></label>
   </div>
-</section>
 
-<section class="panel glass" data-c="nl">
-  <div class="ph"><h2 data-i18n="nlT"></h2><div class="chips legend"></div><span class="grow"></span><div class="seg rng"></div><button class="btn col" type="button"></button></div>
-  <div class="body">
-    <div class="latest" id="nlLatest"></div>
-    <div class="fig"></div>
-    <p class="cap" data-i18n="nlCap"></p>
-  </div>
-</section>
+  <section class="kpis" id="kpis">
+    <div class="card"><div class="k-label" data-i18n="kNet">美联储净流动性（周三）</div><div class="k-val"><span data-f="net_liq">—</span><span class="k-unit" data-i18n="bn">十亿美元</span></div><div class="k-sub" id="sub-net">—</div></div>
+    <div class="card"><div class="k-label" data-i18n="kHy">高收益债利差（HY OAS）</div><div class="k-val"><span data-f="hy">—</span><span class="k-unit">%</span></div><div class="k-sub" id="sub-hy">—</div></div>
+    <div class="card"><div class="k-label" data-i18n="kVix">VIX（周三收盘）</div><div class="k-val"><span data-f="vix">—</span></div><div class="k-sub" id="sub-vix">—</div></div>
+    <div class="card"><div class="k-label" data-i18n="kNfci">芝加哥联储金融状况指数 NFCI</div><div class="k-val"><span data-f="nfci">—</span></div><div class="k-sub" id="sub-nfci">—</div></div>
+    <div class="card"><div class="k-label" data-i18n="kCot">资产管理人 标普期货净多 / 未平仓量</div><div class="k-val"><span data-f="es_am">—</span><span class="k-unit">%</span></div><div class="k-sub" id="sub-cot">—</div></div>
+  </section>
 
-<section class="panel glass" data-c="dc">
-  <div class="ph"><h2 data-i18n="dcT"></h2><div class="chips legend"></div><span class="grow"></span><div class="seg rng"></div><button class="btn col" type="button"></button></div>
-  <div class="body">
-    <div class="fig"></div>
-    <p class="cap" data-i18n="dcCap"></p>
-  </div>
-</section>
+  <section id="sec-main">
+    <h2 data-i18n="hMain">净流动性 vs 指数走势</h2>
+    <p class="note" data-i18n="nMain"></p>
+    <div class="legend"><span><i class="sw" style="background:var(--c0)"></i><span data-i18n="lNetL">净流动性（左轴，十亿美元）</span></span><span><i class="sw" style="background:var(--c1)"></i><span id="idxname">—</span><span data-i18n="rAxis">（右轴）</span></span></div>
+    <div class="chart" id="chart-main"></div>
+  </section>
 
-<section class="panel glass" data-c="hy">
-  <div class="ph"><h2 data-i18n="hyT"></h2><span class="grow"></span><div class="seg rng"></div><button class="btn col" type="button"></button></div>
-  <div class="body">
-    <div class="latest" id="hyHead"></div>
-    <div class="fig"></div>
-    <p class="cap" data-i18n="hyCap"></p>
-  </div>
-</section>
+  <section id="sec-decomp">
+    <h2 data-i18n="hDec">净流动性每周变化：由哪一项驱动</h2>
+    <p class="note" data-i18n="nDec"></p>
+    <div class="legend"><span><i class="sw" style="background:var(--c0)"></i><span data-i18n="lFed">美联储资产变化</span></span><span><i class="sw" style="background:var(--c2)"></i><span data-i18n="lTga">−TGA 变化</span></span><span><i class="sw" style="background:var(--c3)"></i><span data-i18n="lRrp">−逆回购变化</span></span><span><i class="sw" style="background:var(--color-fg)"></i><span data-i18n="lNet">净变化</span></span></div>
+    <div class="chart" id="chart-decomp"></div>
+  </section>
 
-<section class="panel glass" data-c="vx">
-  <div class="ph"><h2 data-i18n="vxT"></h2><span class="grow"></span><div class="seg rng"></div><button class="btn col" type="button"></button></div>
-  <div class="body">
-    <div class="latest" id="vxHead"></div>
-    <div class="fig"></div>
-    <p class="cap" data-i18n="vxCap"></p>
-  </div>
-</section>
+  <section id="sec-scatter">
+    <h2 data-i18n="hSc">流动性变化能否领先指数？</h2>
+    <p class="note" id="note-sc">—</p>
+    <div class="chart" id="chart-scatter"></div>
+  </section>
 
-<section class="panel glass" data-c="nf">
-  <div class="ph"><h2 data-i18n="nfT"></h2><span class="grow"></span><div class="seg rng"></div><button class="btn col" type="button"></button></div>
-  <div class="body">
-    <div class="latest" id="nfHead"></div>
-    <div class="fig"></div>
-    <p class="cap" data-i18n="nfCap"></p>
-  </div>
-</section>
+  <section class="two" id="sec-risk">
+    <div>
+      <h2 data-i18n="hHy">高收益债利差（%）</h2>
+      <p class="note" data-i18n="nHy"></p>
+      <div class="chart sm" id="chart-hy"></div>
+    </div>
+    <div>
+      <h2>VIX</h2>
+      <p class="note" data-i18n="nVix"></p>
+      <div class="chart sm" id="chart-vix"></div>
+    </div>
+  </section>
 
-<section class="panel glass" data-c="ct">
-  <div class="ph"><h2 data-i18n="ctT"></h2><div class="chips legend"></div><span class="grow"></span><div class="seg rng"></div><button class="btn col" type="button"></button></div>
-  <div class="body">
-    <div class="row2"><div class="latest" id="ctHead" style="margin:0"></div><div class="seg"><button class="btn" type="button" data-ct="es" data-i18n="ctES"></button><button class="btn" type="button" data-ct="nq" data-i18n="ctNQ"></button></div></div>
-    <div class="fig"></div>
-    <p class="cap" data-i18n="ctCap"></p>
-  </div>
-</section>
+  <section id="sec-cot">
+    <h2><span data-i18n="hCot">期货仓位：</span><span id="cotname">—</span></h2>
+    <p class="note" data-i18n="nCot"></p>
+    <div class="legend"><span><i class="sw" style="background:var(--c0)"></i><span data-i18n="lAm">资产管理人</span></span><span><i class="sw" style="background:var(--c1)"></i><span data-i18n="lLev">杠杆基金</span></span></div>
+    <div class="chart" id="chart-cot"></div>
+    <p class="note" id="note-cot">—</p>
+  </section>
 
-<section class="stats"><div class="stat glass" id="stCorr"></div><div class="stat glass" id="stPct"></div></section>
+  <section id="sec-table">
+    <h2 data-i18n="hTbl">最近 12 周明细</h2>
+    <div class="tw">
+      <table>
+        <thead><tr><th data-i18n="tDate">日期</th><th data-i18n="tNet">净流动性</th><th data-i18n="tFed">美联储资产</th><th>TGA</th><th data-i18n="tRrp">逆回购</th><th data-i18n="tHy">HY 利差 %</th><th>NFCI</th><th>VIX</th><th data-i18n="tSpx">标普500</th><th data-i18n="tNdx">纳指100</th></tr></thead>
+        <tbody id="tbl"></tbody>
+      </table>
+    </div>
+    <p class="note" data-i18n="nTbl"></p>
+  </section>
 
-<section class="notes glass">
-<div data-l="zh"><h2>口径与数据说明</h2><div class="ngrid">
-<div class="nb"><h3><i style="background:var(--net)"></i>净流动性</h3><ul><li>= 美联储总资产 − 财政部 TGA 账户 − 隔夜逆回购（RRP）</li><li>市场常用的近似口径，衡量美联储和财政部带来的美元流入流出</li><li>与股市中期走势相关，但<b>不是因果定律</b></li></ul></div>
-<div class="nb"><h3><i style="background:var(--fed)"></i>取数口径</h3><ul><li>美联储资产、TGA：每周三数值（H.4.1，周四公布）</li><li>逆回购、HY 利差：当周日均值</li><li>VIX、标普500、纳指100：当周最后一个交易日收盘</li></ul></div>
-<div class="nb"><h3><i style="background:var(--spx)"></i>指数与 ETF</h3><ul><li>标普500、纳指100 用 FRED 的<b>指数点位</b>代表 SPY、QQQ</li><li>涨跌幅与 ETF 基本一致，但不含分红</li><li>SPY 价格约为标普500 的十分之一，点位不能直接对比</li></ul></div>
-<div class="nb"><h3><i style="background:var(--hy)"></i>高收益债利差</h3><ul><li>ICE BofA 美国高收益债指数的期权调整利差（OAS）</li><li>利差走阔 = 信用市场要求更高的风险补偿</li><li>FRED 只提供<b>最近 3 年</b>的数据</li></ul></div>
-<div class="nb"><h3><i style="background:var(--vix)"></i>VIX</h3><ul><li>标普500 期权隐含的未来 30 天年化波动率</li><li><b>&lt;15</b> 平静 · <b>15–20</b> 正常 · <b>20–30</b> 升温 · <b>30–35</b> 紧张 · <b>&gt;35</b> 恐慌</li></ul></div>
-<div class="nb"><h3><i style="background:var(--nfci)"></i>NFCI 金融状况指数</h3><ul><li>芝加哥联储编制，综合 100 多个金融市场指标</li><li>0 = 历史平均；<b>正值偏紧</b>、负值偏松</li><li>芝加哥联储每周会修订历史值，本页随之更新</li></ul></div>
-<div class="nb"><h3><i style="background:var(--am)"></i>CFTC 期货持仓</h3><ul><li>金融期货持仓报告（TFF），每周五公布截至周二的数据</li><li>净多头 = 多头 − 空头，再除以未平仓量</li><li><b>资产管理人</b>偏长线；<b>杠杆基金</b>常用期货对冲现货，长期为负属正常</li><li>3、6、9、12 月中旬换月那周会出现一次性跳水，属移仓噪音</li></ul></div>
-<div class="nb"><h3><i style="background:var(--dgreen)"></i>自动更新</h3><ul><li>每周六北京时间 21:17 自动取数（周日再跑一次补漏）</li><li>每次从 2018 年起整段重取，与源头最新版本一致</li><li>任何一项数据取不到或异常，本周不更新，不插值、不补数</li></ul></div>
-</div></div>
-<div data-l="en"><h2>Methodology &amp; data notes</h2><div class="ngrid">
-<div class="nb"><h3><i style="background:var(--net)"></i>Net liquidity</h3><ul><li>= Fed total assets − Treasury General Account (TGA) − overnight reverse repo (RRP)</li><li>A common market proxy for dollar liquidity added or drained by the Fed and the Treasury</li><li>Correlated with equities over months, but <b>not a causal law</b></li></ul></div>
-<div class="nb"><h3><i style="background:var(--fed)"></i>Data basis</h3><ul><li>Fed assets, TGA: Wednesday levels (H.4.1, released Thursday)</li><li>RRP, HY spread: weekly average</li><li>VIX, S&amp;P 500, Nasdaq-100: last close of the week</li></ul></div>
-<div class="nb"><h3><i style="background:var(--spx)"></i>Indices vs ETFs</h3><ul><li>S&amp;P 500 and Nasdaq-100 <b>index levels</b> from FRED stand in for SPY and QQQ</li><li>Moves match the ETFs closely, excluding dividends</li><li>SPY trades near one tenth of the index, so levels are not comparable</li></ul></div>
-<div class="nb"><h3><i style="background:var(--hy)"></i>High-yield spread</h3><ul><li>Option-adjusted spread of the ICE BofA US High Yield Index</li><li>Wider spread = credit markets demand more compensation for risk</li><li>FRED provides <b>only the last 3 years</b></li></ul></div>
-<div class="nb"><h3><i style="background:var(--vix)"></i>VIX</h3><ul><li>30-day implied volatility of S&amp;P 500 options, annualized</li><li><b>&lt;15</b> calm · <b>15–20</b> normal · <b>20–30</b> elevated · <b>30–35</b> stressed · <b>&gt;35</b> panic</li></ul></div>
-<div class="nb"><h3><i style="background:var(--nfci)"></i>NFCI</h3><ul><li>Chicago Fed National Financial Conditions Index, built from 100+ market measures</li><li>0 = historical average; <b>positive = tighter</b>, negative = looser</li><li>The Chicago Fed revises history weekly; this page follows</li></ul></div>
-<div class="nb"><h3><i style="background:var(--am)"></i>CFTC positioning</h3><ul><li>Traders in Financial Futures report, released Friday for Tuesday positions</li><li>Net long = long − short, divided by open interest</li><li><b>Asset managers</b> are longer-term; <b>leveraged funds</b> often hedge cash longs with futures, so a net short is normal</li><li>Roll weeks in mid Mar / Jun / Sep / Dec show one-off drops (noise)</li></ul></div>
-<div class="nb"><h3><i style="background:var(--dgreen)"></i>Auto update</h3><ul><li>Every Saturday 13:17 UTC (retry on Sunday)</li><li>The full history since 2018 is re-fetched each time to match the latest source vintage</li><li>If any source fails or looks wrong, nothing is updated that week; gaps are never filled</li></ul></div>
-</div></div>
-</section>
-<footer id="foot"></footer>
-</main>
+  <details id="notes">
+    <summary data-i18n="sNotes">指标说明与使用方法</summary>
+    <ul data-l="zh">
+      <li><b>净流动性</b>：市场上常用的近似口径，跟踪美联储资产负债表扩张或缩减、财政部发债或花钱带来的美元流入流出。它与股市的中期走势有相关性，但不是因果定律。逆回购余额已经接近 0，它现在基本不再起缓冲作用，变化主要来自美联储资产和 TGA。</li>
+      <li><b>HY OAS</b>：ICE BofA 美国高收益债指数的期权调整利差，是信用市场的风险偏好温度计。</li>
+      <li><b>NFCI</b>：芝加哥联储金融状况指数，综合 100 多个金融市场指标；0 为历史平均，正值偏紧、负值偏松。芝加哥联储每周会修订历史值。</li>
+      <li><b>百分位</b>：当前值在最近 156 周（3 年）中低于它的数值所占比例。</li>
+      <li><b>COT</b>：每周五公布截至周二的持仓，滞后 3 天；只覆盖期货，看不到现货和场外衍生品，不代表机构整体买卖。</li>
+      <li><b>怎么用</b>：慢变量定方向（净流动性趋势、利差、仓位极端值），不要拿单周数据择时。仓位处于 3 年高位时，下跌中被动减仓的空间更大；处于低位时，反弹燃料更多。</li>
+      <li><b>自动更新</b>：每周六北京时间 21:17 自动从 2018 年起整段重取（周日再跑一次补漏）；任何一项数据取不到或异常，当周不更新，不插值、不补数。</li>
+      <li>数据来源：FRED（WALCL、WTREGEN、RRPONTSYD、BAMLH0A0HYM2、NFCI、VIXCLS、SP500、NASDAQ100）与 CFTC 公开报告（E-mini S&amp;P 500 代码 13874A，Nasdaq Mini 代码 209742），2018 年以来的周度数据。</li>
+    </ul>
+    <ul data-l="en">
+      <li><b>Net liquidity</b>: a common market proxy for dollar liquidity added or drained by the Fed's balance sheet and Treasury issuance and spending. It correlates with equities over months but is not a causal law. Reverse repo is now near zero and no longer acts as a buffer; changes come mainly from Fed assets and the TGA.</li>
+      <li><b>HY OAS</b>: option-adjusted spread of the ICE BofA US High Yield Index, a gauge of credit risk appetite.</li>
+      <li><b>NFCI</b>: Chicago Fed National Financial Conditions Index, built from 100+ market measures; 0 = average, positive tighter, negative looser. History is revised weekly.</li>
+      <li><b>Percentile</b>: share of the last 156 weeks (3 years) below the current value.</li>
+      <li><b>COT</b>: released Friday for Tuesday positions (3-day lag); futures only, so it does not show cash or OTC positions and is not total institutional buying or selling.</li>
+      <li><b>How to use</b>: let the slow variables set direction (net liquidity trend, spreads, positioning extremes); do not time trades on a single week. Near a 3-year high in positioning there is more room for forced selling in a decline; near a low, more fuel for a rebound.</li>
+      <li><b>Auto update</b>: every Saturday 13:17 UTC the full history since 2018 is re-fetched (retry on Sunday); if any source fails or looks wrong, nothing is updated that week and gaps are never filled.</li>
+      <li>Sources: FRED (WALCL, WTREGEN, RRPONTSYD, BAMLH0A0HYM2, NFCI, VIXCLS, SP500, NASDAQ100) and CFTC public reports (E-mini S&amp;P 500 code 13874A, Nasdaq Mini code 209742), weekly since 2018.</li>
+    </ul>
+  </details>
+
+  <footer id="foot">—</footer>
+</div>
 
 <script>
-(async()=>{try{
-const D=await fetch('data/dashboard_data.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();});
-const N=D.d.length,L=N-1,NS='http://www.w3.org/2000/svg';
-const diff=(a,s=1)=>a.map((v,i)=>i>0&&v!=null&&a[i-1]!=null?s*(v-a[i-1]):null);
-D.dfed=diff(D.fed);D.dtga=diff(D.tga,-1);D.drrp=diff(D.rrp,-1);D.dnet=diff(D.net);
-let lang=(()=>{try{return localStorage.getItem('usl-lang')==='en'?'en':'zh';}catch(e){return 'zh';}})();
-let ctK='es';
-const WD={zh:['周日','周一','周二','周三','周四','周五','周六'],en:['Sun','Mon','Tue','Wed','Thu','Fri','Sat']};
-const dl=d=>{const w=WD[lang][new Date(d+'T12:00:00Z').getUTCDay()];return lang==='zh'?`${d}（${w}）`:`${d} (${w})`;};
-const T={zh:{title:'美股流动性与机构仓位报告',
- asof:(d,c)=>`数据截至 <b>${dl(d)}</b> · CFTC <b>${c}</b>`,
- lede:'跟踪美元流动性（美联储资产负债表与财政部账户）、信用和波动率等风险指标，以及机构在股指期货上的仓位，用来判断大盘所处的资金环境。每周自动更新。',
- netN:'净流动性 • 十亿美元',hyN:'高收益债利差 • HY OAS',vixN:'VIX • 波动率指数',nfciN:'NFCI • 金融状况指数',esN:'标普期货 • 资产管理人净多',nqN:'纳指期货 • 资产管理人净多',
- bn:'十亿美元',w1:'1周',w4:'4周',w13:'13周',w52:'52周',r3y:'3年区间',pp:'个百分点',
- pctl:p=>`近 3 年第 ${p} 百分位`,
- netPill:(u)=>u?'近 13 周回升：资金在流入':'近 13 周下降：资金在被抽走',
- hyZ:{n:'低于 4%：信用市场平稳',e:'4–6%：信用压力升温',s:'高于 6%：信用市场紧张'},
- vxZ:{z1:'低于 15：市场平静',z2:'15–20：正常波动',z3:'20–30：波动升温',z4:'30–35：高度紧张',z5:'高于 35：恐慌区'},
- nfZ:{t:'高于 0：紧于历史平均',l:'低于 0：松于历史平均'},
- cotZ:{hi:'仓位拥挤（近 3 年前 10%）',lo:'仓位很轻（近 3 年后 10%）',mid:'仓位在常态区间'},
- levSub:(v,c)=>`杠杆基金 ${v}% · 报告日 ${c}`,
- nfSub:'0 = 历史平均；正值偏紧，负值偏松',
- ovT:'叠加对比 • 净流动性 vs 指数',nlT:'净流动性与构成 • 十亿美元',dcT:'净流动性每周变化 • 由哪一项驱动',hyT:'高收益债利差 • %',vxT:'VIX 波动率指数',nfT:'NFCI 金融状况指数',ctT:'CFTC 股指期货仓位 • 净多头占未平仓量',
- mBase:'起点=100',mMM:'区间归一化',r1:'近1年',r3:'近3年',r5:'近5年',rAll:'2018年至今',col:'收起 ▾',exp:'展开 ▸',reset:'重置缩放',
- net:'净流动性',spx:'标普500（SPY）',ndx:'纳指100（QQQ）',fed:'美联储总资产',tga:'TGA 账户',rrp:'隔夜逆回购',dfed:'美联储资产变化',dtga:'−TGA 变化',drrp:'−逆回购变化',dnet:'净变化',
- hy:'HY 利差',vix:'VIX',nfci:'NFCI',am:'资产管理人',lev:'杠杆基金',ctES:'标普500（SPY）',ctNQ:'纳指100（QQQ）',start100:'起点 = 100',rep:'报告日',
- ovCapBase:'起点=100：每条线以当前区间第一周为 100，比较相对涨跌。点按曲线可看原始数值。所有图共用一组时间范围按钮；拖动平移，滚轮 / 双指缩放，双击或点「重置缩放」恢复。',
- ovCapMM:'区间归一化：每条线按可见区间的最低–最高缩放到 0–100，只比形状和拐点是否同步。点按曲线显示原始数值。',
- nlCap:'美联储总资产减去 TGA 和逆回购，就是净流动性。逆回购余额已接近 0，不再起缓冲作用，近期变化主要来自美联储资产和 TGA。点图例可隐藏一条线。',
- dcCap:'柱子按来源拆分每周变化：美联储资产变化、TGA 变化取反（TGA 增加 = 抽走流动性）、逆回购变化取反；白点为净变化。TGA 在报税月和发债高峰波动很大，单周噪音大，看连续几周的方向更有意义。',
- hyCap:'利差走阔代表信用市场在要求更高的风险补偿，往往与股市回撤同时出现。底色：低于 4% 平稳、4–6% 升温、高于 6% 紧张。FRED 只提供最近 3 年数据，所以更长区间的前段是空的。',
- vxCap:'标普500 期权隐含的未来 30 天年化波动率。底色：低于 15 平静、15–20 正常、20–30 升温、30–35 紧张、高于 35 恐慌。这里是每周最后一个交易日的收盘值。',
- nfCap:'芝加哥联储全国金融状况指数。高于 0（红色底色）代表金融条件紧于历史平均，低于 0 代表宽松。数值每周会被修订。',
- ctCap:'资产管理人以养老金、共同基金为主，偏长线；杠杆基金以对冲基金、CTA 为主，偏短线。处于 3 年高位时，下跌中被动减仓的空间更大；处于低位时，反弹燃料更多。换月那周的一次性跳水是移仓噪音。',
- corrT:'净流动性能否领先指数？',corrH:['','相关系数','样本周数'],corrRows:{spx_all:'标普500 · 2018年至今',spx_21:'标普500 · 2021年至今',ndx_all:'纳指100 · 2018年至今',ndx_21:'纳指100 · 2021年至今'},
- corrCap:'过去 13 周净流动性变化，与之后 13 周指数涨跌幅的相关系数。窗口逐周重叠，真正独立的样本只有约 30 个，2018–2019 缩表期这个关系甚至为负。只能当背景参考，不是择时信号。',
- pctT:'当前读数在近 3 年的位置',pctH:['','最新','百分位'],pctRows:{hy:'HY 利差',vix:'VIX',nfci:'NFCI',es_am:'标普期货 · 资产管理人',es_lev:'标普期货 · 杠杆基金',nq_am:'纳指期货 · 资产管理人',nq_lev:'纳指期货 · 杠杆基金'},
- pctCap:'百分位 = 最近 156 周中低于当前值的周数占比。100 表示 3 年最高。',
- foot:(a,b,u)=>`数据范围 ${a} 至 ${b} · 每周六自动更新 · 最后更新 ${u} · 数据：FRED（圣路易斯联储）、CFTC · 背景照片：Nicholas Cappello / <a href="https://unsplash.com/photos/close-up-photo-of-monitor-displaying-graph-Wb63zqJ5gnE">Unsplash</a>`},
-en:{title:'US Liquidity & Positioning Report',
- asof:(d,c)=>`Data as of <b>${dl(d)}</b> · CFTC <b>${c}</b>`,
- lede:'Tracks dollar liquidity (the Fed balance sheet and the Treasury account), credit and volatility risk gauges, and institutional positioning in equity index futures, to judge the funding backdrop for the market. Updated automatically every week.',
- netN:'Net liquidity • $bn',hyN:'High-yield spread • HY OAS',vixN:'VIX • Volatility index',nfciN:'NFCI • Financial conditions',esN:'S&P futures • asset mgr net long',nqN:'Nasdaq futures • asset mgr net long',
- bn:'$bn',w1:'1W',w4:'4W',w13:'13W',w52:'52W',r3y:'3-yr range',pp:'pp',
- pctl:p=>`${p}th percentile of 3 yrs`,
- netPill:(u)=>u?'Up over 13 weeks: liquidity flowing in':'Down over 13 weeks: liquidity being drained',
- hyZ:{n:'Below 4%: credit calm',e:'4–6%: credit stress rising',s:'Above 6%: credit stressed'},
- vxZ:{z1:'Below 15: calm',z2:'15–20: normal',z3:'20–30: elevated',z4:'30–35: stressed',z5:'Above 35: panic zone'},
- nfZ:{t:'Above 0: tighter than average',l:'Below 0: looser than average'},
- cotZ:{hi:'Crowded (top 10% of 3 yrs)',lo:'Very light (bottom 10% of 3 yrs)',mid:'Within the normal range'},
- levSub:(v,c)=>`Leveraged funds ${v}% · report ${c}`,
- nfSub:'0 = average; positive tighter, negative looser',
- ovT:'Overlay • net liquidity vs indices',nlT:'Net liquidity & components • $bn',dcT:'Weekly change in net liquidity • by driver',hyT:'High-yield spread • %',vxT:'VIX volatility index',nfT:'NFCI financial conditions',ctT:'CFTC index futures • net long as % of open interest',
- mBase:'Start = 100',mMM:'Range-normalized',r1:'1Y',r3:'3Y',r5:'5Y',rAll:'Since 2018',col:'Collapse ▾',exp:'Expand ▸',reset:'Reset zoom',
- net:'Net liquidity',spx:'S&P 500 (SPY)',ndx:'Nasdaq-100 (QQQ)',fed:'Fed total assets',tga:'TGA',rrp:'Reverse repo',dfed:'Δ Fed assets',dtga:'−Δ TGA',drrp:'−Δ RRP',dnet:'Net change',
- hy:'HY spread',vix:'VIX',nfci:'NFCI',am:'Asset managers',lev:'Leveraged funds',ctES:'S&P 500 (SPY)',ctNQ:'Nasdaq-100 (QQQ)',start100:'Start = 100',rep:'Report',
- ovCapBase:'Start = 100: each line is set to 100 on the first week of the window to compare relative moves. Tap for raw values. All charts share one set of range buttons; drag to pan, wheel / pinch to zoom, double-click or Reset zoom to restore.',
- ovCapMM:'Range-normalized: each line is scaled 0–100 by its min–max in the visible window, to compare shape and turning points only. Readouts show raw values.',
- nlCap:'Fed total assets minus the TGA and reverse repo gives net liquidity. RRP is now near zero and no longer acts as a buffer, so recent changes come mainly from Fed assets and the TGA. Click a legend chip to hide a line.',
- dcCap:'Bars split each week\'s change by driver: change in Fed assets, minus the change in TGA (a rising TGA drains liquidity), minus the change in RRP; white dots are the net change. The TGA swings around tax dates and heavy issuance, so read the direction over several weeks.',
- hyCap:'A wider spread means credit markets demand more compensation for risk; it often widens alongside equity drawdowns. Shading: below 4% calm, 4–6% rising stress, above 6% stressed. FRED only provides 3 years, so longer ranges start empty.',
- vxCap:'30-day implied volatility of S&P 500 options, annualized. Shading: below 15 calm, 15–20 normal, 20–30 elevated, 30–35 stressed, above 35 panic. Weekly values are the last close of each week.',
- nfCap:'Chicago Fed National Financial Conditions Index. Above 0 (red shading) means conditions tighter than average; below 0 looser. Values are revised every week.',
- ctCap:'Asset managers (pensions, mutual funds) are longer-term; leveraged funds (hedge funds, CTAs) are shorter-term. Near a 3-year high there is more room for forced selling in a decline; near a low, more fuel for a rebound. One-off drops in roll weeks are noise.',
- corrT:'Does net liquidity lead the indices?',corrH:['','Correlation','Weeks'],corrRows:{spx_all:'S&P 500 · since 2018',spx_21:'S&P 500 · since 2021',ndx_all:'Nasdaq-100 · since 2018',ndx_21:'Nasdaq-100 · since 2021'},
- corrCap:'Correlation between the 13-week change in net liquidity and the index return over the following 13 weeks. Windows overlap week to week, so there are only about 30 independent samples, and in the 2018–2019 balance-sheet runoff the relation was negative. Background context only, not a timing signal.',
- pctT:'Where today sits in the last 3 years',pctH:['','Latest','Percentile'],pctRows:{hy:'HY spread',vix:'VIX',nfci:'NFCI',es_am:'S&P futures · asset mgrs',es_lev:'S&P futures · leveraged funds',nq_am:'Nasdaq futures · asset mgrs',nq_lev:'Nasdaq futures · leveraged funds'},
- pctCap:'Percentile = share of the last 156 weeks below the current value. 100 means a 3-year high.',
- foot:(a,b,u)=>`Data ${a} to ${b} · updated automatically every Saturday · last update ${u} · Sources: FRED (St. Louis Fed), CFTC · Background photo: Nicholas Cappello / <a href="https://unsplash.com/photos/close-up-photo-of-monitor-displaying-graph-Wb63zqJ5gnE">Unsplash</a>`}};
-const t=k=>T[lang][k];
-const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-const fmt=(v,p=0)=>v==null?'—':v.toLocaleString('en-US',{minimumFractionDigits:p,maximumFractionDigits:p});
-const sg=(v,p=0)=>v==null?'—':(v>0?'+':v<0?'−':'')+fmt(Math.abs(v),p);
-const el=(tag,a,p)=>{const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;};
-const small=()=>matchMedia('(max-width:640px)').matches;
-const lastI=a=>{let i=L;while(i>0&&a[i]==null)i--;return i;};
-const minmax=(a,i0=0)=>{let lo=Infinity,hi=-Infinity,li=0,hi_=0;for(let i=i0;i<=L;i++){const v=a[i];if(v==null)continue;if(v<lo){lo=v;li=i;}if(v>hi){hi=v;hi_=i;}}return {lo,hi,li,hi_};};
-const pct3=(a,i)=>{const w=[];for(let j=Math.max(0,i-155);j<=i;j++)if(a[j]!=null)w.push(a[j]);const x=a[i];return x==null||!w.length?null:Math.round(100*w.filter(v=>v<x).length/w.length);};
-const ago=(a,i,k)=>{const j=i-k;return j>=0&&a[i]!=null&&a[j]!=null?a[i]-a[j]:null;};
-const cHy=v=>v>6?'red':v>=4?'orange':'';
-const cVix=v=>v>35?'red':v>=20?'orange':v<15?'green':'';
-const vxk=v=>v<15?'z1':v<20?'z2':v<30?'z3':v<35?'z4':'z5';
-const hyk=v=>v<4?'n':v<=6?'e':'s';
+(async function () {
+  const T = {
+    zh: {
+      title: '美股流动性与机构仓位跟踪', cIdx: '对照指数', cRange: '时间区间', nSpx: '标普500（SPY）', nNdx: '纳斯达克100（QQQ）',
+      r1: '近 1 年', r3: '近 3 年', rAll: '2018 年至今', bn: '十亿美元',
+      kNet: '美联储净流动性（周三）', kHy: '高收益债利差（HY OAS）', kVix: 'VIX（周三收盘）', kNfci: '芝加哥联储金融状况指数 NFCI', kCot: '资产管理人 标普期货净多 / 未平仓量',
+      hMain: '净流动性 vs 指数走势', nMain: '净流动性 = 美联储总资产 − 财政部 TGA 账户 − 隔夜逆回购（RRP）。指数用 FRED 的指数点位代替 ETF 价格，走势与 SPY / QQQ 基本一致，但不含分红。',
+      lNetL: '净流动性（左轴，十亿美元）', rAxis: '（右轴）',
+      hDec: '净流动性每周变化：由哪一项驱动', nDec: '柱子按来源拆分：美联储资产变化、TGA 变化取反（TGA 增加 = 抽走流动性）、逆回购变化取反。圆点为当周净变化。TGA 在报税月和发债高峰会大幅波动，单周数据噪音大，看连续几周的方向更有意义。',
+      lFed: '美联储资产变化', lTga: '−TGA 变化', lRrp: '−逆回购变化', lNet: '净变化',
+      hSc: '流动性变化能否领先指数？', hHy: '高收益债利差（%）',
+      nHy: '利差走阔代表信用市场在为风险要更高补偿，往往与股市回撤同时发生。FRED 只提供 ICE 指数最近 3 年的数据。',
+      nVix: '20 以上通常意味着做市商撤单、盘口变薄，市场流动性变差。',
+      hCot: '期货仓位：', nCot: 'CFTC 金融期货持仓（TFF），净多头 = 多头 − 空头，除以未平仓量。资产管理人以养老金、共同基金为主，偏长线；杠杆基金以对冲基金、CTA 为主，偏短线，常用期货对冲现货多头，所以长期为负很正常。每年 3、6、9、12 月中旬合约换月那一周会出现一次性大跳水，属于移仓噪音。',
+      lAm: '资产管理人', lLev: '杠杆基金',
+      hTbl: '最近 12 周明细', tDate: '日期', tNet: '净流动性', tFed: '美联储资产', tRrp: '逆回购', tHy: 'HY 利差 %', tSpx: '标普500', tNdx: '纳指100',
+      nTbl: '金额单位：十亿美元。美联储资产、TGA 为周三数值，逆回购、HY 利差为当周日均值，VIX 和指数为当周最后一个交易日收盘。',
+      sNotes: '指标说明与使用方法',
+      take: (v) => `截至 <b>${v.date}</b>，美联储净流动性为 <b>${v.net}</b> 十亿美元，比 13 周前变化 ${v.n13}；高收益债利差 <b>${v.hy}</b>%，处于近 3 年第 <b>${v.hyP}</b> 百分位；VIX 为 <b>${v.vix}</b>。期货端，资产管理人持有的标普 E-mini 净多头占未平仓量 <b>${v.es}</b>%（近 3 年第 <b>${v.esP}</b> 百分位），杠杆基金为 <b>${v.lev}</b>%。`,
+      subNet: (a, b) => `较 13 周前 ${a} · 较 52 周前 ${b}`,
+      subHy: (a, p) => `4 周变化 ${a} 个百分点 · 近 3 年第 ${p} 百分位`,
+      subVix: (a, p) => `4 周变化 ${a} · 近 3 年第 ${p} 百分位`,
+      subNfci: (a) => `4 周变化 ${a} · 负值 = 比历史均值宽松`,
+      subCot: (p, d) => `近 3 年第 ${p} 百分位 · CFTC 报告日 ${d}`,
+      sc: (r) => `横轴：过去 13 周净流动性变化；纵轴：之后 13 周的指数涨跌幅（全部历史，不受时间区间筛选影响）。竖虚线是当前的 13 周变化。相关系数：标普500 全样本 <b>${r.spx_all}</b>、2021 年以来 <b>${r.spx_2021}</b>；纳斯达克100 全样本 <b>${r.ndx_all}</b>、2021 年以来 <b>${r.ndx_2021}</b>。注意：窗口逐周重叠，真正独立的样本只有约 30 个，2018–2019 缩表期这个关系甚至是负的，只能当作背景参考，不能当作择时信号。`,
+      cot: (v) => `纳斯达克期货最新：资产管理人 <b>${v.nqAm}</b>%（近 3 年第 <b>${v.nqAmP}</b> 百分位），杠杆基金 <b>${v.nqLev}</b>%。标普期货杠杆基金处于近 3 年第 <b>${v.esLevP}</b> 百分位。`,
+      cotName: { spx: '标普500 E-mini（对应 SPY）', ndx: '纳斯达克100 E-mini（对应 QQQ）' },
+      idx: { spx: '标普500（SPY）', ndx: '纳斯达克100（QQQ）' },
+      netL: '净流动性', hyL: 'HY 利差', scX: '过去 13 周净流动性变化（十亿美元）', now: '当前',
+      tip13: '13 周净流动性变化', tipFwd: (n) => `之后 13 周${n}`,
+      foot: (a, b, u) => `数据范围 ${a} 至 ${b} · 每周六自动更新 · 最后更新 ${u} · 数据：FRED（圣路易斯联储）、CFTC · 仅供个人参考，不构成投资建议`,
+      fail: '这张图的数据加载失败。'
+    },
+    en: {
+      title: 'US Liquidity & Positioning Tracker', cIdx: 'Index', cRange: 'Range', nSpx: 'S&P 500 (SPY)', nNdx: 'Nasdaq-100 (QQQ)',
+      r1: 'Last 1 year', r3: 'Last 3 years', rAll: 'Since 2018', bn: '$bn',
+      kNet: 'Fed net liquidity (Wednesday)', kHy: 'High-yield spread (HY OAS)', kVix: 'VIX (Wednesday close)', kNfci: 'Chicago Fed NFCI', kCot: 'Asset managers: S&P futures net long / OI',
+      hMain: 'Net liquidity vs the index', nMain: 'Net liquidity = Fed total assets − Treasury General Account (TGA) − overnight reverse repo (RRP). FRED index levels stand in for ETF prices; moves match SPY / QQQ closely, excluding dividends.',
+      lNetL: 'Net liquidity (left axis, $bn)', rAxis: ' (right axis)',
+      hDec: 'Weekly change in net liquidity: what drove it', nDec: 'Bars split the change by source: change in Fed assets, minus the change in TGA (a rising TGA drains liquidity), minus the change in reverse repo. Dots are the net weekly change. The TGA swings around tax dates and heavy issuance, so read the direction over several weeks.',
+      lFed: 'Δ Fed assets', lTga: '−Δ TGA', lRrp: '−Δ reverse repo', lNet: 'Net change',
+      hSc: 'Does liquidity lead the index?', hHy: 'High-yield spread (%)',
+      nHy: 'A wider spread means credit markets demand more compensation for risk; it often widens alongside equity drawdowns. FRED only provides the last 3 years of the ICE index.',
+      nVix: 'Above 20, market makers usually pull quotes and order books thin out, so liquidity worsens.',
+      hCot: 'Futures positioning: ', nCot: 'CFTC Traders in Financial Futures. Net long = long − short, divided by open interest. Asset managers (pensions, mutual funds) are longer-term; leveraged funds (hedge funds, CTAs) are shorter-term and often hedge cash longs with futures, so a net short is normal. Roll weeks in mid March / June / September / December show one-off drops — roll noise.',
+      lAm: 'Asset managers', lLev: 'Leveraged funds',
+      hTbl: 'Last 12 weeks', tDate: 'Date', tNet: 'Net liquidity', tFed: 'Fed assets', tRrp: 'Reverse repo', tHy: 'HY spread %', tSpx: 'S&P 500', tNdx: 'Nasdaq-100',
+      nTbl: 'Amounts in $bn. Fed assets and TGA are Wednesday levels; reverse repo and HY spread are weekly averages; VIX and indices are the last close of the week.',
+      sNotes: 'Definitions and how to use this',
+      take: (v) => `As of <b>${v.date}</b>, Fed net liquidity is <b>${v.net}</b> $bn, ${v.n13} versus 13 weeks ago; the high-yield spread is <b>${v.hy}</b>%, at the <b>${v.hyP}</b>th percentile of the last 3 years; VIX is <b>${v.vix}</b>. In futures, asset managers' net long in S&P E-mini is <b>${v.es}</b>% of open interest (<b>${v.esP}</b>th percentile of 3 years), leveraged funds <b>${v.lev}</b>%.`,
+      subNet: (a, b) => `vs 13 weeks ago ${a} · vs 52 weeks ago ${b}`,
+      subHy: (a, p) => `4-week change ${a} pp · ${p}th percentile of 3 yrs`,
+      subVix: (a, p) => `4-week change ${a} · ${p}th percentile of 3 yrs`,
+      subNfci: (a) => `4-week change ${a} · negative = looser than average`,
+      subCot: (p, d) => `${p}th percentile of 3 yrs · CFTC report ${d}`,
+      sc: (r) => `X: change in net liquidity over the past 13 weeks; Y: index return over the next 13 weeks (full history, not affected by the range filter). The dashed line is the current 13-week change. Correlation: S&P 500 full sample <b>${r.spx_all}</b>, since 2021 <b>${r.spx_2021}</b>; Nasdaq-100 full sample <b>${r.ndx_all}</b>, since 2021 <b>${r.ndx_2021}</b>. Caution: windows overlap week to week, leaving only about 30 independent samples, and in the 2018–2019 balance-sheet runoff the relation was negative. Background context only, not a timing signal.`,
+      cot: (v) => `Nasdaq futures latest: asset managers <b>${v.nqAm}</b>% (<b>${v.nqAmP}</b>th percentile of 3 yrs), leveraged funds <b>${v.nqLev}</b>%. S&P futures leveraged funds are at the <b>${v.esLevP}</b>th percentile of 3 yrs.`,
+      cotName: { spx: 'S&P 500 E-mini (SPY)', ndx: 'Nasdaq-100 E-mini (QQQ)' },
+      idx: { spx: 'S&P 500 (SPY)', ndx: 'Nasdaq-100 (QQQ)' },
+      netL: 'Net liquidity', hyL: 'HY spread', scX: 'Change in net liquidity over past 13 weeks ($bn)', now: 'Now',
+      tip13: '13-week change in net liquidity', tipFwd: (n) => `Next 13 weeks, ${n}`,
+      foot: (a, b, u) => `Data ${a} to ${b} · updated automatically every Saturday · last update ${u} · Sources: FRED (St. Louis Fed), CFTC · For personal reference only, not investment advice`,
+      fail: 'Data for this chart failed to load.'
+    }
+  };
+  let lang = (() => { try { return localStorage.getItem('usl-lang') === 'en' ? 'en' : 'zh'; } catch (e) { return 'zh'; } })();
+  const t = (k) => T[lang][k];
+  const S = { idx: 'spx', range: 156 };
+  const loc = d3.formatLocale({ decimal: '.', thousands: ',', grouping: [3], currency: ['$', ''], minus: '-' });
+  const f = loc.format;
+  const n = (v) => (v == null || v === '') ? null : +v;
+  const pd = d3.utcParse('%Y-%m-%d');
+  const dfmt = d3.utcFormat('%Y-%m-%d');
+  const C = (i) => `var(--c${i})`;
 
-/* ---------- KPI cards ---------- */
-function card(o){
-  const chips=o.chips.map(([lab,val,dir])=>`<span class="${dir||''}">${lab} ${val}</span>`).join('');
-  return `<div class="card glass"><div class="ch"><i style="background:var(${o.c})"></i>${o.name}</div>
-   <div class="big ${o.cls||''}">${o.big}${o.unit?`<small>${o.unit}</small>`:''}</div>
-   <div class="chg">${chips}</div><div class="sub">${o.sub}</div>
-   <div class="bar"><span style="width:${Math.max(2,Math.min(100,o.pos))}%;background:var(${o.c})"></span></div>
-   <div class="pill ${o.pcls||''}">${o.pill}</div></div>`;}
-const i3=Math.max(0,L-155);
-function cards(){
-  const dirU=v=>v==null?'':v>0?'up':v<0?'dn':'',dirD=v=>v==null?'':v>0?'dn':v<0?'up':'';
-  const rng=(a,p,u='')=>{const m=minmax(a,i3);return `${t('r3y')} ${fmt(m.lo,p)}${u} – ${fmt(m.hi,p)}${u}`;};
-  const pos=(a,i)=>{const m=minmax(a,i3);return (a[i]-m.lo)/(m.hi-m.lo||1)*100;};
-  let h='';
-  {const a=D.net,i=lastI(a),d13=ago(a,i,13);
-   h+=card({c:'--net',name:t('netN'),big:fmt(a[i]),chips:[[t('w4'),sg(ago(a,i,4)),dirU(ago(a,i,4))],[t('w13'),sg(d13),dirU(d13)],[t('w52'),sg(ago(a,i,52)),dirU(ago(a,i,52))]],
-     sub:`${dl(D.d[i])} · ${rng(a,0)}`,pos:pos(a,i),pill:t('netPill')(d13>0),pcls:''});}
-  {const a=D.hy,i=lastI(a),v=a[i];
-   h+=card({c:'--hy',name:t('hyN'),big:fmt(v,2),unit:'%',cls:cHy(v),chips:[[t('w4'),sg(ago(a,i,4),2),dirD(ago(a,i,4))],[t('w13'),sg(ago(a,i,13),2),dirD(ago(a,i,13))]],
-     sub:rng(a,2,'%'),pos:pos(a,i),pill:`${t('hyZ')[hyk(v)]} · ${t('pctl')(pct3(a,i))}`,pcls:cHy(v)});}
-  {const a=D.vix,i=lastI(a),v=a[i];
-   h+=card({c:'--vix',name:t('vixN'),big:fmt(v,1),cls:cVix(v),chips:[[t('w1'),sg(ago(a,i,1),1),dirD(ago(a,i,1))],[t('w4'),sg(ago(a,i,4),1),dirD(ago(a,i,4))]],
-     sub:rng(a,1),pos:pos(a,i),pill:`${t('vxZ')[vxk(v)]} · ${t('pctl')(pct3(a,i))}`,pcls:cVix(v)});}
-  {const a=D.nfci,i=lastI(a),v=a[i],cls=v>0?'orange':'';
-   h+=card({c:'--nfci',name:t('nfciN'),big:fmt(v,3),cls,chips:[[t('w4'),sg(ago(a,i,4),3),dirD(ago(a,i,4))],[t('w13'),sg(ago(a,i,13),3),dirD(ago(a,i,13))]],
-     sub:t('nfSub'),pos:pos(a,i),pill:`${t('nfZ')[v>0?'t':'l']} · ${t('pctl')(pct3(a,i))}`,pcls:cls});}
-  for(const k of ['es','nq']){const a=D[k+'_am'],i=lastI(a),v=a[i],p=pct3(a,i),z=p>=90?'hi':p<=10?'lo':'mid',cls=z==='hi'?'orange':z==='lo'?'green':'';
-   let j=i-1;while(j>0&&a[j]==null)j--;let j4=i;for(let n=0;n<4&&j4>0;){j4--;if(a[j4]!=null)n++;}
-   h+=card({c:'--am',name:t(k+'N'),big:fmt(v,1),unit:'%',chips:[[t('w1'),sg(v-a[j],1),dirU(v-a[j])],[t('w4'),sg(v-a[j4],1),dirU(v-a[j4])]],
-     sub:t('levSub')(fmt(D[k+'_lev'][i],1),D.cd[i]),pos:p,pill:`${t('pctl')(p)} · ${t('cotZ')[z]}`,pcls:cls});}
-  document.getElementById('cards').innerHTML=h;
-}
+  let liqRaw, cotRaw, meta = {};
+  try {
+    [liqRaw, cotRaw] = await Promise.all([d3.csv('data/liquidity_weekly.csv', { cache: 'no-cache' }), d3.csv('data/cot_equity_index.csv', { cache: 'no-cache' })]);
+    try { meta = await d3.json('data/latest.json', { cache: 'no-cache' }); } catch (e) { meta = {}; }
+  } catch (e) {
+    document.querySelectorAll('.chart').forEach((el) => { const p = document.createElement('div'); p.className = 'fail'; p.textContent = t('fail'); el.replaceChildren(p); });
+    return;
+  }
+  const LIQ = liqRaw.map((r) => ({ date: r.date, d: pd(r.date), fed: n(r.fed_assets_bn), tga: n(r.tga_bn), rrp: n(r.rrp_bn), net: n(r.net_liq_bn), hy: n(r.hy_oas), nfci: n(r.nfci), vix: n(r.vix), spx: n(r.spx), ndx: n(r.ndx) }));
+  const COT = cotRaw.map((r) => ({ date: r.date, d: pd(r.date), es_am: n(r.es_am_pct), es_lev: n(r.es_lev_pct), nq_am: n(r.nq_am_pct), nq_lev: n(r.nq_lev_pct) }));
 
-/* ---------- side info ---------- */
-function side(){
-  const i=lastI(D.net);
-  document.getElementById('nlLatest').innerHTML=['net','fed','tga','rrp'].map(k=>`<span><span class="sw" style="background:var(--${k});margin-right:7px"></span>${t(k)} <b>${fmt(D[k][i])}</b></span>`).join('');
-  {const a=D.hy,j=lastI(a),m=minmax(a);document.getElementById('hyHead').innerHTML=`<span>${dl(D.d[j])} <b>${fmt(a[j],2)}%</b></span><span>${lang==='zh'?'3年最高':'3-yr high'} <b>${fmt(m.hi,2)}%</b>（${D.d[m.hi_]}）</span><span>${lang==='zh'?'3年最低':'3-yr low'} <b>${fmt(m.lo,2)}%</b>（${D.d[m.li]}）</span>`;}
-  {const a=D.vix,j=lastI(a),m=minmax(a);document.getElementById('vxHead').innerHTML=`<span>${dl(D.d[j])} <b>${fmt(a[j],1)}</b></span><span>${lang==='zh'?'2018年以来最高':'High since 2018'} <b>${fmt(m.hi,1)}</b>（${D.d[m.hi_]}）</span>`;}
-  {const a=D.nfci,j=lastI(a);document.getElementById('nfHead').innerHTML=`<span>${dl(D.d[j])} <b>${fmt(a[j],3)}</b></span><span>${t('nfZ')[a[j]>0?'t':'l']}</span>`;}
-  {const j=lastI(D[ctK+'_am']);document.getElementById('ctHead').innerHTML=`<span>${t('rep')} ${D.cd[j]}</span><span><span class="sw" style="background:var(--am);margin-right:7px"></span>${t('am')} <b>${fmt(D[ctK+'_am'][j],1)}%</b></span><span><span class="sw" style="background:var(--lev);margin-right:7px"></span>${t('lev')} <b>${fmt(D[ctK+'_lev'][j],1)}%</b></span>`;}
-  // correlation
-  const corr=(k,from)=>{const xs=[],ys=[];for(let j=13;j<N-13;j++){if(D.d[j]<from)continue;const a=D.net[j],b=D.net[j-13],p0=D[k][j],p1=D[k][j+13];if([a,b,p0,p1].some(v=>v==null))continue;xs.push(a-b);ys.push(p1/p0-1);}
-    const n=xs.length,mx=xs.reduce((s,v)=>s+v,0)/n,my=ys.reduce((s,v)=>s+v,0)/n;let sxy=0,sxx=0,syy=0;for(let q=0;q<n;q++){sxy+=(xs[q]-mx)*(ys[q]-my);sxx+=(xs[q]-mx)**2;syy+=(ys[q]-my)**2;}return [sxy/Math.sqrt(sxx*syy),n];};
-  const cr=[['spx_all','spx','0000'],['spx_21','spx','2021'],['ndx_all','ndx','0000'],['ndx_21','ndx','2021']].map(([id,k,f])=>[id,...corr(k,f)]);
-  const H=t('corrH');
-  document.getElementById('stCorr').innerHTML=`<div class="ch"><i style="background:var(--net)"></i>${t('corrT')}</div><table><tr><th>${H[0]}</th><th>${H[1]}</th><th>${H[2]}</th></tr>${cr.map(([id,r,n])=>`<tr><td>${t('corrRows')[id]}</td><td class="n">${r.toFixed(2)}</td><td class="dt">${n}</td></tr>`).join('')}</table><p class="cap">${t('corrCap')}</p>`;
-  const P=t('pctH'),pr=[['hy',2,'%'],['vix',1,''],['nfci',3,''],['es_am',1,'%'],['es_lev',1,'%'],['nq_am',1,'%'],['nq_lev',1,'%']];
-  document.getElementById('stPct').innerHTML=`<div class="ch"><i style="background:var(--hy)"></i>${t('pctT')}</div><table><tr><th>${P[0]}</th><th>${P[1]}</th><th>${P[2]}</th></tr>${pr.map(([k,p,u])=>{const j=lastI(D[k]);return `<tr><td>${t('pctRows')[k]}</td><td class="n">${fmt(D[k][j],p)}${u}</td><td class="dt">${pct3(D[k],j)}</td></tr>`;}).join('')}</table><p class="cap">${t('pctCap')}</p>`;
-  document.getElementById('asof').innerHTML=t('asof')(D.d[L],D.cot_last||'—');
-  document.getElementById('foot').innerHTML=t('foot')(D.d[0],D.d[L],D.updated||'');
-  document.getElementById('ovCap').textContent=t(ovMode==='base'?'ovCapBase':'ovCapMM');
-}
+  // ---------- latest readings, percentiles and correlation ----------
+  const pct = (arr, k, idx) => {
+    const w = arr.slice(Math.max(0, idx - 155), idx + 1).map((r) => r[k]).filter((v) => v != null);
+    const x = arr[idx][k];
+    return x == null || !w.length ? null : Math.round(100 * w.filter((v) => v < x).length / w.length);
+  };
+  const i = LIQ.length - 1, j = COT.length - 1;
+  const dif = (k, h) => (LIQ[i][k] == null || LIQ[i - h][k] == null) ? null : LIQ[i][k] - LIQ[i - h][k];
+  const LT = {
+    date: LIQ[i].date, net_liq: LIQ[i].net, net_chg13: dif('net', 13), net_chg52: dif('net', 52),
+    hy: LIQ[i].hy, hy_chg4: dif('hy', 4), hy_pct3y: pct(LIQ, 'hy', i),
+    vix: LIQ[i].vix, vix_chg4: dif('vix', 4), vix_pct3y: pct(LIQ, 'vix', i),
+    nfci: LIQ[i].nfci, nfci_chg4: dif('nfci', 4),
+    cot_date: COT[j].date, es_am: COT[j].es_am, es_am_pct3y: pct(COT, 'es_am', j), es_lev: COT[j].es_lev, es_lev_pct3y: pct(COT, 'es_lev', j),
+    nq_am: COT[j].nq_am, nq_am_pct3y: pct(COT, 'nq_am', j), nq_lev: COT[j].nq_lev
+  };
+  const CORR = {};
+  for (const idx of ['spx', 'ndx']) for (const [tag, from] of [['all', '0000'], ['2021', '2021']]) {
+    const xs = [], ys = [];
+    for (let q = 13; q < LIQ.length - 13; q++) {
+      if (LIQ[q].date < from) continue;
+      const a = LIQ[q].net, b = LIQ[q - 13].net, p0 = LIQ[q][idx], p1 = LIQ[q + 13][idx];
+      if ([a, b, p0, p1].some((v) => v == null)) continue;
+      xs.push(a - b); ys.push(p1 / p0 - 1);
+    }
+    const k = xs.length, mx = d3.mean(xs), my = d3.mean(ys);
+    let sxy = 0, sxx = 0, syy = 0;
+    for (let q = 0; q < k; q++) { sxy += (xs[q] - mx) * (ys[q] - my); sxx += (xs[q] - mx) ** 2; syy += (ys[q] - my) ** 2; }
+    CORR[`${idx}_${tag}`] = sxy / Math.sqrt(sxx * syy);
+  }
 
-/* ---------- shared range ---------- */
-const RANGES=[['r1',12],['r3',36],['r5',60],['rAll',0]];
-let range='r3';
-function baseWin(){const m=RANGES.find(r=>r[0]===range)[1];if(!m)return [0,L];const x=new Date(D.d[L]);x.setMonth(x.getMonth()-m);const s=x.toISOString().slice(0,10);let i=0;while(D.d[i]<s)i++;return [i,L];}
+  // ---------- helpers ----------
+  const toneF = (v, good, p) => v == null ? '—' : `<span class="${v * good > 0 ? 'good' : v * good < 0 ? 'bad' : ''}">${f('+' + p)(v)}</span>`;
+  const cut = (arr) => S.range ? arr.slice(-S.range) : arr;
+  const sep = () => (lang === 'zh' ? '：' : ': ');
+  function measure(svg, values, fmt) {
+    const g = svg.append('g').attr('class', 'axis'); let w = 0;
+    for (const v of values) { const tx = g.append('text').text(fmt(v)); w = Math.max(w, tx.node().getComputedTextLength()); }
+    g.remove(); return w || 30;
+  }
+  function frame(el, h, aria) {
+    el.replaceChildren();
+    const W = Math.max(280, el.clientWidth || 600);
+    const svg = d3.select(el).append('svg').attr('width', W).attr('height', h).attr('role', 'img').attr('aria-label', aria);
+    const tip = document.createElement('div'); tip.className = 'tip'; el.append(tip);
+    return { W, H: h, svg, tip };
+  }
+  function showTip(fr, x, y, title, rows) {
+    const tp = fr.tip; tp.replaceChildren();
+    const hd = document.createElement('div'); hd.className = 't-h'; hd.textContent = title; tp.append(hd);
+    for (const [c, label] of rows) {
+      const row = document.createElement('div');
+      if (c) { const sw = document.createElement('span'); sw.className = 'sw'; sw.style.background = c; row.append(sw); }
+      row.append(label); tp.append(row);
+    }
+    tp.style.display = 'block';
+    const tw = tp.offsetWidth;
+    tp.style.left = ((x + 14 + tw > fr.W) ? Math.max(0, x - 14 - tw) : x + 14) + 'px';
+    tp.style.top = Math.max(0, y) + 'px';
+  }
+  const hideTip = (fr) => { fr.tip.style.display = 'none'; };
 
-/* ---------- series ---------- */
-const bnF=v=>fmt(v)+' '+t('bn'),sbnF=v=>sg(v)+' '+t('bn');
-const SER={net:{c:'--net',fmt:bnF,end:v=>fmt(v)},spx:{c:'--spx',fmt:v=>fmt(v)},ndx:{c:'--ndx',fmt:v=>fmt(v)},fed:{c:'--fed',fmt:bnF,end:v=>fmt(v)},tga:{c:'--tga',fmt:bnF,end:v=>fmt(v)},rrp:{c:'--rrp',fmt:bnF,end:v=>fmt(v)},
-  dfed:{c:'--fed',fmt:sbnF,bar:true},dtga:{c:'--tga',fmt:sbnF,bar:true},drrp:{c:'--rrp',fmt:sbnF,bar:true},dnet:{c:'--ink',fmt:sbnF,dot:true},
-  hy:{c:'--hy',fmt:v=>fmt(v,2)+'%'},vix:{c:'--vix',fmt:v=>fmt(v,1)},nfci:{c:'--nfci',fmt:v=>fmt(v,3)},am:{c:'--am',fmt:v=>fmt(v,1)+'%'},lev:{c:'--lev',fmt:v=>fmt(v,1)+'%'}};
-const ovOn=new Set(['net','spx','ndx']);let ovMode='base';
-const hidden={nl:new Set(),dc:new Set(),ct:new Set()};
-const LEG={nl:['net','fed','tga','rrp'],dc:['dfed','dtga','drrp','dnet'],ct:['am','lev']};
-function niceTicks(a,b,n){const span=b-a,st0=span/n,mag=10**Math.floor(Math.log10(st0)),st=[1,2,2.5,5,10].map(x=>x*mag).find(x=>x>=st0);const out=[];for(let v=Math.ceil(a/st)*st;v<=b+1e-9;v+=st)out.push(+v.toFixed(6));return out;}
-const mk=(k,y,extra={})=>({k,col:css(SER[k].c),y,raw:y,fmt:SER[k].fmt,lab:t(k),end:SER[k].end||SER[k].fmt,...extra});
+  function lines(el, o) {
+    const rows = o.rows;
+    const fr = frame(el, o.height || 300, o.aria);
+    const { W, H, svg } = fr;
+    if (!rows.length) return;
+    const ext = (ser) => {
+      const v = ser.flatMap((s) => rows.map((r) => r[s.key]).filter((x) => x != null));
+      let [a, b] = d3.extent(v);
+      if (o.zero) { a = Math.min(a, 0); b = Math.max(b, 0); }
+      const p = (b - a) * 0.05 || 1; return [a - p, b + p];
+    };
+    const yL = d3.scaleLinear().domain(ext(o.left)).nice();
+    const yR = o.right ? d3.scaleLinear().domain(ext(o.right)).nice() : null;
+    const ml = measure(svg, yL.ticks(5), o.fmtL) + 12;
+    const mr = yR ? measure(svg, yR.ticks(5), o.fmtR) + 12 : 12;
+    const m = { t: 10, r: mr, b: 26, l: ml };
+    const x = d3.scaleUtc().domain(d3.extent(rows, (r) => r.d)).range([m.l, W - m.r]);
+    yL.range([H - m.b, m.t]); if (yR) yR.range([H - m.b, m.t]);
+    svg.append('g').attr('class', 'grid').selectAll('line').data(yL.ticks(5)).join('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', (d) => yL(d)).attr('y2', (d) => yL(d));
+    if (o.zero) svg.append('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', yL(0)).attr('y2', yL(0)).style('stroke', 'var(--chart-ref)');
+    const nt = Math.max(2, Math.floor((W - m.l - m.r) / 90));
+    svg.append('g').attr('class', 'axis').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).ticks(nt).tickFormat(d3.utcFormat('%Y-%m')).tickSizeOuter(0));
+    svg.append('g').attr('class', 'axis').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(yL).ticks(5).tickFormat(o.fmtL).tickSize(0).tickPadding(6)).call((g) => g.select('.domain').remove());
+    if (yR) svg.append('g').attr('class', 'axis').attr('transform', `translate(${W - m.r},0)`).call(d3.axisRight(yR).ticks(5).tickFormat(o.fmtR).tickSize(0).tickPadding(6)).call((g) => g.select('.domain').remove());
+    const all = [...o.left.map((s) => ({ ...s, y: yL })), ...(o.right || []).map((s) => ({ ...s, y: yR }))];
+    for (const s of all) {
+      svg.append('path').datum(rows.filter((r) => r[s.key] != null)).attr('fill', 'none').style('stroke', s.color).attr('stroke-width', 1.75).attr('stroke-linejoin', 'round')
+        .attr('d', d3.line().x((r) => x(r.d)).y((r) => s.y(r[s.key])));
+    }
+    const vl = svg.append('line').attr('y1', m.t).attr('y2', H - m.b).style('stroke', 'var(--chart-ref)').style('display', 'none');
+    const dots = all.map((s) => svg.append('circle').attr('r', 3.5).style('fill', s.color).style('display', 'none'));
+    const bis = d3.bisector((r) => r.d).center;
+    svg.append('rect').attr('x', m.l).attr('y', m.t).attr('width', Math.max(0, W - m.l - m.r)).attr('height', Math.max(0, H - m.t - m.b)).attr('fill', 'transparent')
+      .on('pointermove', (ev) => {
+        const [px] = d3.pointer(ev);
+        const r = rows[bis(rows, x.invert(px))]; if (!r) return;
+        const cx = x(r.d);
+        vl.attr('x1', cx).attr('x2', cx).style('display', null);
+        all.forEach((s, k) => { const v = r[s.key]; dots[k].style('display', v == null ? 'none' : null).attr('cx', cx).attr('cy', v == null ? 0 : s.y(v)); });
+        showTip(fr, cx, m.t, dfmt(r.d), all.filter((s) => r[s.key] != null).map((s) => [s.color, `${s.label}${sep()}${s.fmt(r[s.key])}`]));
+      })
+      .on('pointerleave', () => { vl.style('display', 'none'); dots.forEach((dd) => dd.style('display', 'none')); hideTip(fr); });
+  }
 
-const charts={};
-function lines(c,i0,i1){
-  const lo=Math.ceil(i0),hi=Math.floor(i1);
-  if(c.id==='ov')return [...ovOn].map(k=>{const a=D[k];let base=null,mn=Infinity,mx=-Infinity;
-      for(let i=lo;i<=hi;i++){const v=a[i];if(v==null)continue;if(base==null)base=v;mn=Math.min(mn,v);mx=Math.max(mx,v);}
-      const tr=ovMode==='base'?(v=>v/base*100):(v=>mx>mn?(v-mn)/(mx-mn)*100:50);
-      return {k,col:css(SER[k].c),y:a.map(v=>v==null||base==null?null:tr(v)),raw:a,fmt:SER[k].fmt,lab:t(k),end:v=>v.toFixed(1)};});
-  if(c.id==='nl')return LEG.nl.filter(k=>!hidden.nl.has(k)).map(k=>mk(k,D[k],{area:k==='net'}));
-  if(c.id==='dc')return LEG.dc.filter(k=>!hidden.dc.has(k)).map(k=>mk(k,D[k],{bar:SER[k].bar,dot:SER[k].dot}));
-  if(c.id==='hy')return [mk('hy',D.hy,{area:true})];
-  if(c.id==='vx')return [mk('vix',D.vix,{area:true})];
-  if(c.id==='nf')return [mk('nfci',D.nfci)];
-  return LEG.ct.filter(k=>!hidden.ct.has(k)).map(k=>mk(k,D[ctK+'_'+k],{sparse:true}));
-}
-function yDom(c,ls,i0,i1){
-  const lo=Math.ceil(i0),hi=Math.floor(i1);
-  if(c.id==='ov'&&ovMode==='mm')return [-4,104];
-  if(c.id==='dc'){let mn=0,mx=0;for(let i=lo;i<=hi;i++){let p=0,q=0;for(const s of ls){const v=s.y[i];if(v==null)continue;if(s.bar){if(v>0)p+=v;else q+=v;}else{mn=Math.min(mn,v);mx=Math.max(mx,v);}}mn=Math.min(mn,q);mx=Math.max(mx,p);}const pad=(mx-mn||1)*.06;return [mn-pad,mx+pad];}
-  if(c.id==='vx'){let mx=0;for(let i=lo;i<=hi;i++)if(D.vix[i]!=null)mx=Math.max(mx,D.vix[i]);return [0,Math.max(40,mx*1.08)];}
-  if(c.id==='hy'){let mx=0;for(let i=lo;i<=hi;i++)if(D.hy[i]!=null)mx=Math.max(mx,D.hy[i]);return [0,Math.max(7,mx*1.1)];}
-  let mn=Infinity,mx=-Infinity;
-  for(const s of ls)for(let i=lo;i<=hi;i++){const v=s.y[i];if(v!=null){mn=Math.min(mn,v);mx=Math.max(mx,v);}}
-  if(c.id==='ov'){mn=Math.min(mn,100);mx=Math.max(mx,100);}
-  if(c.id==='nl'||c.id==='ct'||c.id==='nf'){mn=Math.min(mn,0);mx=Math.max(mx,0);}
-  if(!isFinite(mn)){mn=0;mx=1;}const pad=(mx-mn||1)*.06;return [mn-pad,mx+pad];
-}
+  // ---------- text ----------
+  const FMT = { net_liq: f(',.0f'), hy: f('.2f'), vix: f('.1f'), nfci: f('.3f'), es_am: f('.1f') };
+  function drawText() {
+    document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+    document.title = t('title');
+    document.querySelectorAll('[data-i18n]').forEach((e) => { e.textContent = t(e.dataset.i18n); });
+    document.querySelectorAll('[data-lang]').forEach((b) => b.classList.toggle('on', b.dataset.lang === lang));
+    document.querySelectorAll('[data-f]').forEach((e) => { const v = LT[e.dataset.f]; e.textContent = v == null ? '—' : FMT[e.dataset.f](v); });
+    document.getElementById('take').innerHTML = t('take')({
+      date: LT.date, net: f(',.0f')(LT.net_liq), n13: `<b>${toneF(LT.net_chg13, 1, ',.0f')}</b>`, hy: f('.2f')(LT.hy), hyP: LT.hy_pct3y,
+      vix: f('.1f')(LT.vix), es: f('.1f')(LT.es_am), esP: LT.es_am_pct3y, lev: f('.1f')(LT.es_lev)
+    });
+    document.getElementById('sub-net').innerHTML = t('subNet')(toneF(LT.net_chg13, 1, ',.0f'), toneF(LT.net_chg52, 1, ',.0f'));
+    document.getElementById('sub-hy').innerHTML = t('subHy')(toneF(LT.hy_chg4, -1, '.2f'), LT.hy_pct3y);
+    document.getElementById('sub-vix').innerHTML = t('subVix')(toneF(LT.vix_chg4, -1, '.1f'), LT.vix_pct3y);
+    document.getElementById('sub-nfci').innerHTML = t('subNfci')(toneF(LT.nfci_chg4, -1, '.3f'));
+    document.getElementById('sub-cot').textContent = t('subCot')(LT.es_am_pct3y, LT.cot_date);
+    const r2 = (k) => f('.2f')(CORR[k]);
+    document.getElementById('note-sc').innerHTML = t('sc')({ spx_all: r2('spx_all'), spx_2021: r2('spx_2021'), ndx_all: r2('ndx_all'), ndx_2021: r2('ndx_2021') });
+    document.getElementById('note-cot').innerHTML = t('cot')({ nqAm: f('.1f')(LT.nq_am), nqAmP: LT.nq_am_pct3y, nqLev: f('.1f')(LT.nq_lev), esLevP: LT.es_lev_pct3y });
+    document.getElementById('idxname').textContent = t('idx')[S.idx];
+    document.getElementById('cotname').textContent = t('cotName')[S.idx];
+    document.getElementById('foot').textContent = t('foot')(LIQ[0].date, LIQ[LIQ.length - 1].date, meta.updated || '');
+    const tb = document.getElementById('tbl'); tb.replaceChildren();
+    const cols = [['date', String], ['net', f(',.0f')], ['fed', f(',.0f')], ['tga', f(',.0f')], ['rrp', f(',.0f')], ['hy', f('.2f')], ['nfci', f('.3f')], ['vix', f('.1f')], ['spx', f(',.0f')], ['ndx', f(',.0f')]];
+    for (const r of LIQ.slice(-12).reverse()) {
+      const tr = document.createElement('tr');
+      for (const [c, fm] of cols) { const td = document.createElement('td'); const v = r[c]; td.textContent = v == null ? '—' : fm(v); tr.append(td); }
+      tb.append(tr);
+    }
+  }
 
-function draw(c){
-  const svg=c.svg;while(svg.firstChild)svg.removeChild(svg.firstChild);
-  const W=c.fig.clientWidth,H=c.fig.clientHeight;if(!W)return;
-  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
-  const [i0,i1]=c.view,ls=lines(c,i0,i1),[y0,y1]=yDom(c,ls,i0,i1);
-  const ticks=niceTicks(y0,y1,W<520?4:5);
-  const tl=v=>c.id==='hy'?v+'%':c.id==='ct'?v+'%':c.id==='nf'?(+v.toFixed(2)).toString():fmt(v);
-  let ml=40;{const probe=el('text',{},svg);for(const v of ticks){probe.textContent=tl(v);ml=Math.max(ml,probe.getComputedTextLength()+16);}probe.remove();}
-  const narrow=W<520,m={l:Math.ceil(ml),r:narrow?12:16,t:16,b:28},pw=W-m.l-m.r,ph=H-m.t-m.b;
-  const X=i=>m.l+(i-i0)/Math.max(1e-9,i1-i0)*pw,Y=v=>m.t+(1-(v-y0)/(y1-y0))*ph;
-  c.g={m,pw,ph,X,Y,ls};
-  const defs=el('defs',{},svg),cp=el('clipPath',{id:'cp-'+c.id},defs);el('rect',{x:m.l,y:m.t-3,width:pw,height:ph+6},cp);
-  const zone=(z,lab)=>{for(const [a,b,v,o,k] of z){const ya=Y(Math.max(a,y0)),yb=Y(Math.min(b,y1));if(ya-yb<=0)continue;el('rect',{x:m.l,y:yb,width:pw,height:ya-yb,fill:css(v),'fill-opacity':o},svg);
-    if(!narrow&&lab&&ya-yb>16){const tx=el('text',{x:m.l+8,y:(ya+yb)/2+4,'fill-opacity':.85},svg);tx.textContent=lab(k);}}};
-  if(c.id==='vx'){zone([[0,15,'--green',.07,'z1'],[15,20,'--mute',.04,'z2'],[20,30,'--orange',.07,'z3'],[30,35,'--orange',.12,'z4'],[35,y1,'--red',.13,'z5']],k=>({z1:lang==='zh'?'平静':'Calm',z2:lang==='zh'?'正常':'Normal',z3:lang==='zh'?'升温':'Elevated',z4:lang==='zh'?'紧张':'Stressed',z5:lang==='zh'?'恐慌':'Panic'})[k]);
-    for(const v of [15,20,30,35])el('line',{x1:m.l,x2:m.l+pw,y1:Y(v),y2:Y(v),stroke:'rgba(255,255,255,.2)','stroke-dasharray':'4 5'},svg);}
-  if(c.id==='hy'){zone([[0,4,'--green',.05,'n'],[4,6,'--orange',.08,'e'],[6,y1,'--red',.12,'s']],k=>({n:lang==='zh'?'平稳':'Calm',e:lang==='zh'?'升温':'Rising stress',s:lang==='zh'?'紧张':'Stressed'})[k]);
-    for(const v of [4,6])el('line',{x1:m.l,x2:m.l+pw,y1:Y(v),y2:Y(v),stroke:'rgba(255,255,255,.2)','stroke-dasharray':'4 5'},svg);}
-  if(c.id==='nf')zone([[0,y1,'--red',.09,'t'],[y0,0,'--green',.05,'l']],k=>({t:lang==='zh'?'偏紧':'Tighter',l:lang==='zh'?'偏松':'Looser'})[k]);
-  for(const v of ticks){if(v<y0-1e-9||v>y1+1e-9)continue;
-    el('line',{x1:m.l,x2:m.l+pw,y1:Y(v),y2:Y(v),stroke:'rgba(255,255,255,.06)'},svg);
-    const tx=el('text',{x:m.l-8,y:Y(v)+4,'text-anchor':'end'},svg);tx.textContent=tl(v);}
-  const refs=c.id==='ov'&&ovMode==='base'?[[100,t('start100')]]:['dc','ct','nf'].includes(c.id)?[[0,'']]:[];
-  for(const [v,lab] of refs){if(v<y0||v>y1)continue;el('line',{x1:m.l,x2:m.l+pw,y1:Y(v),y2:Y(v),stroke:'rgba(255,255,255,.3)','stroke-dasharray':'5 5'},svg);
-    if(lab){const tx=el('text',{x:m.l+8,y:Y(v)-5,style:'paint-order:stroke;stroke:rgba(8,12,20,.85);stroke-width:4px;stroke-linejoin:round'},svg);tx.textContent=lab;}}
-  const span=i1-i0,nt=narrow?3:6,stp=Math.max(1,Math.round(span/nt));
-  for(let i=Math.ceil(i0);i<=Math.floor(i1);i+=stp){const xx=X(i),tx=el('text',{x:xx,y:H-9,'text-anchor':i===Math.ceil(i0)?'start':xx>m.l+pw-30?'end':'middle'},svg);tx.textContent=span>40?D.d[i].slice(0,7).replace('-','/'):D.d[i].slice(5);}
-  const gl=el('g',{'clip-path':`url(#cp-${c.id})`},svg),lo=Math.max(0,Math.floor(i0)),hi=Math.min(L,Math.ceil(i1));
-  if(c.id==='dc'){const bw=Math.max(1,pw/Math.max(1,i1-i0)*.72),bars=ls.filter(s=>s.bar);
-    for(let i=lo;i<=hi;i++){let p=0,q=0;for(const s of bars){const v=s.y[i];if(!v)continue;const a=v>0?p:q,b=a+v;if(v>0)p=b;else q=b;
-      el('rect',{x:X(i)-bw/2,y:Y(Math.max(a,b)),width:bw,height:Math.max(.6,Math.abs(Y(a)-Y(b))),fill:s.col,'fill-opacity':.9},gl);}}
-    for(const s of ls.filter(s=>s.dot))if(hi-lo<=160)for(let i=lo;i<=hi;i++)if(s.y[i]!=null)el('circle',{cx:X(i),cy:Y(s.y[i]),r:2.4,fill:s.col},gl);}
-  for(const s of ls){if(s.bar||s.dot)continue;const segs=[];let cur=null;for(let i=lo;i<=hi;i++){const v=s.y[i];if(v==null){if(!s.sparse)cur=null;continue;}if(!cur){cur=[];segs.push(cur);}cur.push([X(i),Y(v)]);}
-    if(s.area){const gid='g-'+c.id+'-'+s.k,lg=el('linearGradient',{id:gid,x1:0,y1:0,x2:0,y2:1},defs);
-      el('stop',{offset:0,'stop-color':s.col,'stop-opacity':.2},lg);el('stop',{offset:1,'stop-color':s.col,'stop-opacity':0},lg);
-      for(const sg_ of segs){if(sg_.length<2)continue;el('path',{d:'M'+sg_.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join('L')+`L${sg_[sg_.length-1][0].toFixed(1)},${m.t+ph}L${sg_[0][0].toFixed(1)},${m.t+ph}Z`,fill:`url(#${gid})`},gl);}}
-    for(const sg_ of segs)el('path',{d:'M'+sg_.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join('L'),fill:'none',stroke:s.col,'stroke-width':2.2,'stroke-linejoin':'round','stroke-linecap':'round'},gl);}
-  const ends=[];
-  for(const s of ls){if(s.bar||s.dot)continue;let i=Math.min(L,Math.floor(i1));while(i>lo&&s.y[i]==null)i--;if(s.y[i]==null)continue;
-    const py=Y(s.y[i]);el('circle',{cx:X(i),cy:py,r:4.5,fill:s.col,stroke:'rgba(8,12,20,.9)','stroke-width':2},svg);
-    ends.push({s,i,ty:py+4,v:c.id==='ov'?s.y[i]:s.raw[i]});}
-  ends.sort((a,b)=>a.ty-b.ty);for(let j=1;j<ends.length;j++)if(ends[j].ty-ends[j-1].ty<16)ends[j].ty=ends[j-1].ty+16;
-  for(const e of ends){const tx=el('text',{x:X(e.i)-11,y:Math.min(e.ty,m.t+ph-2),'text-anchor':'end',style:`fill:${e.s.col};font-weight:700;font-size:13px;paint-order:stroke;stroke:rgba(8,12,20,.85);stroke-width:4px;stroke-linejoin:round`},svg);tx.textContent=e.s.end(e.v);}
-  c.cross=el('line',{y1:m.t,y2:m.t+ph,stroke:'rgba(255,255,255,.35)','stroke-width':1,visibility:'hidden'},svg);
-  c.dots=ls.map(s=>el('circle',{r:4.5,fill:s.col,stroke:'#0b1220','stroke-width':2,visibility:'hidden'},svg));
-  const bw=baseWin();c.resetB.hidden=!(Math.abs(c.view[0]-bw[0])>.01||Math.abs(c.view[1]-bw[1])>.01);
-}
+  // ---------- charts ----------
+  function cMain() {
+    const k = S.idx;
+    lines(document.getElementById('chart-main'), {
+      rows: cut(LIQ), height: 320, aria: `${t('netL')} / ${t('idx')[k]}`,
+      left: [{ key: 'net', label: t('netL'), color: C(0), fmt: (v) => f(',.0f')(v) + ' ' + t('bn') }],
+      right: [{ key: k, label: t('idx')[k], color: C(1), fmt: f(',.0f') }],
+      fmtL: f(',.0f'), fmtR: f(',.0f')
+    });
+  }
+  function cHy() {
+    lines(document.getElementById('chart-hy'), { rows: cut(LIQ).filter((r) => r.hy != null), height: 240, aria: t('hHy'), left: [{ key: 'hy', label: t('hyL'), color: C(0), fmt: (v) => f('.2f')(v) + '%' }], fmtL: f('.1f') });
+  }
+  function cVix() {
+    lines(document.getElementById('chart-vix'), { rows: cut(LIQ), height: 240, aria: 'VIX', left: [{ key: 'vix', label: 'VIX', color: C(0), fmt: f('.1f') }], fmtL: f('.0f') });
+  }
+  function cCot() {
+    const p = S.idx === 'spx' ? 'es' : 'nq', pf = (v) => f('.1f')(v) + '%';
+    lines(document.getElementById('chart-cot'), {
+      rows: cut(COT), height: 300, zero: true, aria: t('cotName')[S.idx],
+      left: [{ key: p + '_am', label: t('lAm'), color: C(0), fmt: pf }, { key: p + '_lev', label: t('lLev'), color: C(1), fmt: pf }],
+      fmtL: (v) => f('.0f')(v) + '%'
+    });
+  }
+  function cDecomp() {
+    const el = document.getElementById('chart-decomp');
+    const ch = [];
+    for (let q = 1; q < LIQ.length; q++) { const a = LIQ[q], b = LIQ[q - 1]; ch.push({ d: a.d, fed: a.fed - b.fed, tga: -(a.tga - b.tga), rrp: -(a.rrp - b.rrp), net: a.net - b.net }); }
+    const rows = cut(ch);
+    const fr = frame(el, 300, t('hDec'));
+    const { W, H, svg } = fr;
+    const keys = [{ k: 'fed', label: t('lFed'), c: C(0) }, { k: 'tga', label: t('lTga'), c: C(2) }, { k: 'rrp', label: t('lRrp'), c: C(3) }];
+    let lo = 0, hi = 0;
+    for (const r of rows) { let p = 0, q = 0; for (const s of keys) { const v = r[s.k]; if (v > 0) p += v; else q += v; } hi = Math.max(hi, p, r.net); lo = Math.min(lo, q, r.net); }
+    const y = d3.scaleLinear().domain([lo * 1.05, hi * 1.05]).nice();
+    const m = { t: 10, r: 12, b: 26, l: measure(svg, y.ticks(5), f(',.0f')) + 12 };
+    y.range([H - m.b, m.t]);
+    const x = d3.scaleBand().domain(rows.map((r) => r.d)).range([m.l, W - m.r]).paddingInner(rows.length > 200 ? 0 : 0.2);
+    svg.append('g').attr('class', 'grid').selectAll('line').data(y.ticks(5)).join('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', (v) => y(v)).attr('y2', (v) => y(v));
+    for (const r of rows) {
+      let p = 0, q = 0;
+      for (const s of keys) {
+        const v = r[s.k]; if (!v) continue;
+        const y0 = v > 0 ? p : q, y1 = y0 + v; if (v > 0) p = y1; else q = y1;
+        svg.append('rect').attr('x', x(r.d)).attr('width', Math.max(1, x.bandwidth())).attr('y', y(Math.max(y0, y1))).attr('height', Math.max(0.5, Math.abs(y(y0) - y(y1)))).style('fill', s.c);
+      }
+    }
+    if (rows.length <= 200) svg.append('g').selectAll('circle').data(rows).join('circle').attr('cx', (r) => x(r.d) + x.bandwidth() / 2).attr('cy', (r) => y(r.net)).attr('r', 2.5).style('fill', 'var(--color-fg)');
+    svg.append('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', y(0)).attr('y2', y(0)).style('stroke', 'var(--chart-ref)');
+    const xt = d3.scaleUtc().domain(d3.extent(rows, (r) => r.d)).range([m.l + x.bandwidth() / 2, W - m.r - x.bandwidth() / 2]);
+    svg.append('g').attr('class', 'axis').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(xt).ticks(Math.max(2, Math.floor((W - m.l - m.r) / 90))).tickFormat(d3.utcFormat('%Y-%m')).tickSizeOuter(0));
+    svg.append('g').attr('class', 'axis').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickFormat(f(',.0f')).tickSize(0).tickPadding(6)).call((g) => g.select('.domain').remove());
+    const hl = svg.append('rect').attr('y', m.t).attr('height', H - m.t - m.b).style('fill', 'var(--chart-grid)').style('opacity', 0.6).style('display', 'none').lower();
+    svg.append('rect').attr('x', m.l).attr('y', m.t).attr('width', W - m.l - m.r).attr('height', H - m.t - m.b).attr('fill', 'transparent')
+      .on('pointermove', (ev) => {
+        const [px] = d3.pointer(ev);
+        const k = Math.max(0, Math.min(rows.length - 1, Math.floor((px - m.l) / x.step())));
+        const r = rows[k]; if (!r) return;
+        hl.attr('x', x(r.d)).attr('width', Math.max(1, x.bandwidth())).style('display', null);
+        const sf = (v) => f('+,.0f')(v) + ' ' + t('bn');
+        showTip(fr, x(r.d) + x.bandwidth() / 2, m.t, dfmt(r.d), [...keys.map((s) => [s.c, `${s.label}${sep()}${sf(r[s.k])}`]), ['var(--color-fg)', `${t('lNet')}${sep()}${sf(r.net)}`]]);
+      })
+      .on('pointerleave', () => { hl.style('display', 'none'); hideTip(fr); });
+  }
+  function cScatter() {
+    const el = document.getElementById('chart-scatter'), k = S.idx, L = LIQ;
+    const pts = [];
+    for (let q = 13; q < L.length - 13; q++) {
+      if ([L[q].net, L[q - 13].net, L[q][k], L[q + 13][k]].some((v) => v == null)) continue;
+      pts.push({ d: L[q].d, x: L[q].net - L[q - 13].net, y: 100 * (L[q + 13][k] / L[q][k] - 1) });
+    }
+    const last = L.length - 1, cur = L[last].net - L[last - 13].net;
+    const fr = frame(el, 320, t('hSc'));
+    const { W, H, svg } = fr;
+    const x = d3.scaleLinear().domain(d3.extent([...pts.map((p) => p.x), cur])).nice();
+    const y = d3.scaleLinear().domain(d3.extent(pts, (p) => p.y)).nice();
+    const m = { t: 10, r: 14, b: 40, l: measure(svg, y.ticks(5), (v) => f('.0f')(v) + '%') + 12 };
+    x.range([m.l, W - m.r]); y.range([H - m.b, m.t]);
+    svg.append('g').attr('class', 'grid').selectAll('line').data(y.ticks(5)).join('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', (v) => y(v)).attr('y2', (v) => y(v));
+    svg.append('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', y(0)).attr('y2', y(0)).style('stroke', 'var(--chart-ref)');
+    svg.append('line').attr('x1', x(0)).attr('x2', x(0)).attr('y1', m.t).attr('y2', H - m.b).style('stroke', 'var(--chart-ref)');
+    const recentCut = pts.length - 52;
+    svg.append('g').selectAll('circle').data(pts).join('circle').attr('cx', (p) => x(p.x)).attr('cy', (p) => y(p.y)).attr('r', (p, q) => q >= recentCut ? 3.5 : 2.5)
+      .style('fill', (p, q) => q >= recentCut ? C(1) : C(0)).style('opacity', (p, q) => q >= recentCut ? 0.95 : 0.45);
+    svg.append('line').attr('x1', x(cur)).attr('x2', x(cur)).attr('y1', m.t).attr('y2', H - m.b).style('stroke', 'var(--color-fg)').attr('stroke-dasharray', '4 3');
+    const lab = svg.append('text').attr('y', m.t + 12).attr('font-size', 12).style('fill', 'var(--color-fg)').text(`${t('now')} ${f('+,.0f')(cur)}`);
+    const lw = lab.node().getComputedTextLength();
+    lab.attr('x', x(cur) + 6 + lw > W - m.r ? x(cur) - 6 - lw : x(cur) + 6);
+    svg.append('g').attr('class', 'axis').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).ticks(Math.max(3, Math.floor((W - m.l - m.r) / 80))).tickFormat(f(',.0f')).tickSizeOuter(0));
+    svg.append('g').attr('class', 'axis').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickFormat((v) => f('.0f')(v) + '%').tickSize(0).tickPadding(6)).call((g) => g.select('.domain').remove());
+    svg.append('text').attr('x', W - m.r).attr('y', H - 4).attr('text-anchor', 'end').style('fill', 'var(--text-secondary)').attr('font-size', 12).text(t('scX'));
+    const qt = d3.quadtree(pts, (p) => x(p.x), (p) => y(p.y));
+    const ring = svg.append('circle').attr('r', 6).attr('fill', 'none').style('stroke', 'var(--color-fg)').style('display', 'none');
+    svg.append('rect').attr('x', m.l).attr('y', m.t).attr('width', W - m.l - m.r).attr('height', H - m.t - m.b).attr('fill', 'transparent')
+      .on('pointermove', (ev) => {
+        const [px, py] = d3.pointer(ev);
+        const p = qt.find(px, py, 30);
+        if (!p) { ring.style('display', 'none'); hideTip(fr); return; }
+        ring.attr('cx', x(p.x)).attr('cy', y(p.y)).style('display', null);
+        showTip(fr, x(p.x), Math.max(m.t, y(p.y) - 40), dfmt(p.d), [[null, `${t('tip13')}${sep()}${f('+,.0f')(p.x)} ${t('bn')}`], [null, `${t('tipFwd')(t('idx')[k])}${sep()}${f('+.1f')(p.y)}%`]]);
+      })
+      .on('pointerleave', () => { ring.style('display', 'none'); hideTip(fr); });
+  }
 
-/* ---------- readout ---------- */
-function showTip(c,px,py){
-  const g=c.g;if(!g)return;let i=Math.round(c.view[0]+(px-g.m.l)/g.pw*(c.view[1]-c.view[0]));
-  i=Math.max(Math.ceil(c.view[0]),Math.min(Math.floor(c.view[1]),i));
-  c.cross.setAttribute('x1',g.X(i));c.cross.setAttribute('x2',g.X(i));c.cross.setAttribute('visibility','visible');
-  const at=s=>{if(!s.sparse)return i;let j=i;while(j>=0&&s.y[j]==null)j--;return j;};
-  g.ls.forEach((s,j)=>{const ii=at(s),v=ii>=0?s.y[ii]:null,d=c.dots[j];if(v==null||s.bar){d.setAttribute('visibility','hidden');return;}d.setAttribute('cx',g.X(ii));d.setAttribute('cy',g.Y(v));d.setAttribute('visibility','visible');});
-  const rows=g.ls.map(s=>{const ii=at(s),v=ii>=0?s.raw[ii]:null;
-    return `<span class="r"><span class="sw" style="background:${s.col}"></span>${s.lab}<b>${v==null?'—':s.fmt(v)}</b></span>`;});
-  if(c.id==='ct'){const ii=at(g.ls[0]||{sparse:true,y:D[ctK+'_am']});if(ii>=0&&D.cd[ii])rows.push(`<span class="r" style="color:var(--dim)">${t('rep')}<b style="color:var(--mute)">${D.cd[ii]}</b></span>`);}
-  const sm=small(),tip=c.tip;tip.className='tip'+(sm?' strip':'');tip.innerHTML=`<span class="d">${dl(D.d[i])}</span>`+rows.join('');tip.hidden=false;
-  if(!sm){const W=c.fig.clientWidth,tw=tip.offsetWidth;let x=px+16;if(x+tw>W-6)x=px-tw-16;tip.style.left=Math.max(6,x)+'px';tip.style.top=Math.max(6,Math.min(py-24,c.fig.clientHeight-tip.offsetHeight-6))+'px';}
-  else{tip.style.left='';tip.style.top='';}
-}
-function hideTip(c){c.tip.hidden=true;if(c.cross){c.cross.setAttribute('visibility','hidden');c.dots.forEach(d=>d.setAttribute('visibility','hidden'));}}
-
-/* ---------- zoom / pan ---------- */
-const MINSPAN=8;
-function setView(c,a,b){const [b0,b1]=baseWin(),span=b-a;if(a<b0){a=b0;b=a+span;}if(b>b1){b=b1;a=b-span;}c.view=[Math.max(b0,a),Math.min(b1,b)];draw(c);}
-function zoomAt(c,anchor,factor){const [a,b]=c.view,[b0,b1]=baseWin(),span=b-a;const ns=Math.max(MINSPAN,Math.min(b1-b0,span*factor));if(Math.abs(ns-span)<1e-6)return false;
-  const r=(anchor-a)/span;setView(c,anchor-r*ns,anchor-r*ns+ns);return true;}
-function idxAt(c,px){const g=c.g;return c.view[0]+(px-g.m.l)/g.pw*(c.view[1]-c.view[0]);}
-function bind(c){
-  const f=c.fig,pts=new Map();let st=null,gesture=false;
-  const pos=e=>{const r=f.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top];};
-  f.addEventListener('wheel',e=>{if(!c.g)return;const [x]=pos(e);if(zoomAt(c,idxAt(c,x),e.deltaY>0?1.15:1/1.15)){e.preventDefault();hideTip(c);}},{passive:false});
-  f.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;f.setPointerCapture(e.pointerId);pts.set(e.pointerId,pos(e));
-    if(pts.size===1){st={x:pos(e)[0],view:[...c.view],moved:false};gesture=false;}
-    if(pts.size===2){const [p,q]=[...pts.values()];st={pinch:true,d:Math.hypot(p[0]-q[0],p[1]-q[1])||1,mid:idxAt(c,(p[0]+q[0])/2),view:[...c.view]};gesture=true;hideTip(c);}});
-  f.addEventListener('pointermove',e=>{
-    if(!pts.has(e.pointerId)){if(e.pointerType==='mouse'&&!small())showTip(c,...pos(e));return;}
-    pts.set(e.pointerId,pos(e));if(!st)return;
-    if(st.pinch&&pts.size>=2){const [p,q]=[...pts.values()],d=Math.hypot(p[0]-q[0],p[1]-q[1])||1;const [a,b]=st.view,span=b-a,[b0,b1]=baseWin();
-      const ns=Math.max(MINSPAN,Math.min(b1-b0,span*st.d/d)),r=(st.mid-a)/span;setView(c,st.mid-r*ns,st.mid-r*ns+ns);return;}
-    const dx=pos(e)[0]-st.x;if(Math.abs(dx)>5){st.moved=true;gesture=true;hideTip(c);}
-    if(st.moved){const k=(st.view[1]-st.view[0])/c.g.pw;setView(c,st.view[0]-dx*k,st.view[1]-dx*k);}});
-  const end=e=>{if(!pts.has(e.pointerId))return;pts.delete(e.pointerId);
-    if(pts.size===0){if(st&&!st.pinch&&!st.moved&&!gesture&&e.type==='pointerup')showTip(c,...pos(e));st=null;gesture=false;}else if(pts.size===1)st=null;};
-  f.addEventListener('pointerup',end);f.addEventListener('pointercancel',end);
-  f.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'&&!pts.size)hideTip(c);});
-  f.addEventListener('dblclick',()=>{c.view=baseWin();draw(c);hideTip(c);});
-}
-
-/* ---------- build ---------- */
-for(const p of document.querySelectorAll('.panel')){
-  const id=p.dataset.c,fig=p.querySelector('.fig'),svg=document.createElementNS(NS,'svg');fig.appendChild(svg);
-  const tip=document.createElement('div');tip.className='tip';tip.hidden=true;fig.appendChild(tip);
-  const rb=document.createElement('button');rb.type='button';rb.className='btn reset';rb.hidden=true;fig.appendChild(rb);
-  const c={id,p,fig,svg,tip,resetB:rb,view:baseWin(),collapsed:false};charts[id]=c;
-  rb.addEventListener('click',()=>{c.view=baseWin();draw(c);});
-  p.querySelector('.col').addEventListener('click',()=>{c.collapsed=!c.collapsed;p.querySelector('.body').classList.toggle('hide',c.collapsed);labels();if(!c.collapsed)draw(c);});
-  const rg=p.querySelector('.rng');for(const [k] of RANGES){const b=document.createElement('button');b.type='button';b.className='btn';b.dataset.r=k;
-    b.addEventListener('click',()=>{range=k;for(const x of Object.values(charts)){x.view=baseWin();hideTip(x);}labels();drawAll();});rg.appendChild(b);}
-  bind(c);new ResizeObserver(()=>draw(c)).observe(fig);
-}
-const chk=document.getElementById('ovChecks');
-for(const k of ['net','spx','ndx','fed']){const lb=document.createElement('label');lb.className='chip';const i=document.createElement('input');i.type='checkbox';i.checked=ovOn.has(k);
-  i.addEventListener('change',()=>{if(!i.checked&&ovOn.size===1){i.checked=true;return;}i.checked?ovOn.add(k):ovOn.delete(k);lb.classList.toggle('on',i.checked);draw(charts.ov);hideTip(charts.ov);});
-  const sw=document.createElement('span');sw.className='sw';sw.style.background=`var(${SER[k].c})`;const tx=document.createElement('span');tx.dataset.ser=k;lb.append(i,sw,tx);lb.classList.toggle('on',i.checked);chk.appendChild(lb);}
-for(const b of document.querySelectorAll('[data-mode]'))b.addEventListener('click',()=>{ovMode=b.dataset.mode;labels();draw(charts.ov);hideTip(charts.ov);});
-for(const b of document.querySelectorAll('[data-ct]'))b.addEventListener('click',()=>{ctK=b.dataset.ct;labels();draw(charts.ct);hideTip(charts.ct);});
-for(const [id,keys] of Object.entries(LEG)){const lg=charts[id].p.querySelector('.legend');
-  for(const k of keys){const b=document.createElement('button');b.type='button';b.className='chip';b.dataset.ser=k;b.dataset.lg=id;
-    b.addEventListener('click',()=>{const h=hidden[id];if(h.has(k))h.delete(k);else if(h.size<keys.length-1)h.add(k);labels();draw(charts[id]);hideTip(charts[id]);});lg.appendChild(b);}}
-
-function labels(){
-  document.documentElement.lang=lang==='zh'?'zh-CN':'en';document.title=t('title');
-  for(const e of document.querySelectorAll('[data-i18n]'))e.textContent=t(e.dataset.i18n);
-  for(const b of document.querySelectorAll('[data-lang]'))b.classList.toggle('on',b.dataset.lang===lang);
-  for(const b of document.querySelectorAll('.rng button')){b.textContent=t(b.dataset.r);b.classList.toggle('on',b.dataset.r===range);}
-  for(const c of Object.values(charts)){c.p.querySelector('.col').textContent=c.collapsed?t('exp'):t('col');c.resetB.textContent=t('reset');}
-  for(const b of document.querySelectorAll('[data-mode]'))b.classList.toggle('on',b.dataset.mode===ovMode);
-  for(const b of document.querySelectorAll('[data-ct]'))b.classList.toggle('on',b.dataset.ct===ctK);
-  for(const s of document.querySelectorAll('[data-ser]')){const k=s.dataset.ser;
-    if(s.dataset.lg){s.innerHTML=`<span class="sw" style="background:var(${SER[k].c})"></span>${t(k)}`;s.classList.toggle('off',hidden[s.dataset.lg].has(k));}else s.textContent=t(k);}
-  cards();side();
-}
-function drawAll(){for(const c of Object.values(charts))if(!c.collapsed)draw(c);}
-for(const b of document.querySelectorAll('[data-lang]'))b.addEventListener('click',()=>{if(lang===b.dataset.lang)return;lang=b.dataset.lang;try{localStorage.setItem('usl-lang',lang);}catch(e){}labels();drawAll();for(const c of Object.values(charts))hideTip(c);});
-matchMedia('(max-width:640px)').addEventListener('change',()=>{for(const c of Object.values(charts))hideTip(c);drawAll();});
-document.addEventListener('pointermove',e=>{const g=e.target.closest&&e.target.closest('.glass');if(!g)return;const r=g.getBoundingClientRect();g.style.setProperty('--mx',(e.clientX-r.left)+'px');g.style.setProperty('--my',(e.clientY-r.top)+'px');},{passive:true});
-
-labels();drawAll();
-}catch(err){document.getElementById('cards').innerHTML='<div class="card glass">数据加载失败 / Data failed to load：'+String(err)+'</div>';console.error(err);}})();
+  const ALL = [cMain, cDecomp, cScatter, cHy, cVix, cCot];
+  const drawAll = () => ALL.forEach((fn) => fn());
+  const selIdx = document.getElementById('sel-idx'), selRange = document.getElementById('sel-range');
+  selIdx.addEventListener('change', () => { S.idx = selIdx.value; drawText(); cMain(); cScatter(); cCot(); });
+  selRange.addEventListener('change', () => { S.range = +selRange.value; cMain(); cDecomp(); cHy(); cVix(); cCot(); });
+  document.querySelectorAll('[data-lang]').forEach((b) => b.addEventListener('click', () => {
+    if (lang === b.dataset.lang) return;
+    lang = b.dataset.lang; try { localStorage.setItem('usl-lang', lang); } catch (e) {}
+    drawText(); selIdx.value = S.idx; selRange.value = String(S.range); drawAll();
+  }));
+  let rw = 0;
+  const root = document.querySelector('.lq');
+  new ResizeObserver(() => { if (root.clientWidth !== rw) { rw = root.clientWidth; drawAll(); } }).observe(root);
+  drawText(); drawAll();
+})();
 </script>
 </body>
 </html>
