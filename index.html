@@ -12,6 +12,7 @@
   --color-ok:#1a7f4b;--color-bad:#c2372d;
   --chart-grid:#eceef1;--chart-axis:#d5d9de;--chart-ref:#9aa3ad;--text-secondary:#6b7480;
   --pop-bg:#ffffff;--pop-border:#dfe3e8;--pop-shadow:0 6px 20px rgba(0,0,0,.12);
+  --page-bg:#f3f5f8;--card-shadow:0 1px 2px rgba(16,24,40,.04),0 4px 14px rgba(16,24,40,.05);--row-alt:#fafbfc;--row-hover:#f1f4f8;--row-hi:#eef4ff;
   --c0:#2f6fd6;--c1:#e07b39;--c2:#2e9e6b;--c3:#8a63d2;
   --serif:"Iowan Old Style","Palatino Linotype","Songti SC","Noto Serif SC",Georgia,serif;
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei","Noto Sans SC",Roboto,sans-serif;
@@ -22,25 +23,59 @@
   --color-ok:#4cc38a;--color-bad:#f0776c;
   --chart-grid:#2a2f36;--chart-axis:#3a4049;--chart-ref:#6b7480;--text-secondary:#9aa3ad;
   --pop-bg:#23272d;--pop-border:#363c44;--pop-shadow:0 6px 20px rgba(0,0,0,.5);
+  --page-bg:#111317;--card-shadow:0 1px 2px rgba(0,0,0,.3);--row-alt:#1b1e23;--row-hover:#22262c;--row-hi:#1f2a3a;
   --c0:#6ea2f5;--c1:#f0995f;--c2:#4cc38a;--c3:#a98bea;
 }}
 *{box-sizing:border-box}
-html{background:var(--color-bg)}
-body{margin:0;background:var(--color-bg);color:var(--color-fg);font:15px/1.55 var(--sans)}
-.lq{max-width:1100px;margin:0 auto;padding:28px 20px 40px;display:flex;flex-direction:column;gap:var(--gap-xl)}
+html{background:var(--page-bg)}
+body{margin:0;background:var(--page-bg);color:var(--color-fg);font:15px/1.55 var(--sans)}
+.lq{max-width:1100px;margin:0 auto;padding:28px 20px 40px;display:flex;flex-direction:column;gap:20px}
 .top{display:flex;gap:var(--gap-lg);align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
 .top>div:first-child{flex:1 1 520px}
 .lq h1{font-family:var(--serif);font-weight:400;font-size:30px;line-height:1.2;margin:0}
 .lq .take{color:var(--color-fg-muted);margin:var(--gap-sm) 0 0;line-height:1.7}
 .lq .take b{color:var(--color-fg);font-weight:600;font-variant-numeric:tabular-nums}
-.langsw{display:inline-flex;border:1px solid var(--color-border-line);border-radius:999px;padding:3px;gap:2px;background:var(--color-panel)}
-.langsw button{font:inherit;font-size:13px;font-weight:600;border:0;border-radius:999px;padding:5px 14px;background:transparent;color:var(--color-fg-muted);cursor:pointer}
-.langsw button.on{background:var(--color-fg);color:var(--color-bg)}
-.controls{display:flex;gap:var(--gap-lg);flex-wrap:wrap;align-items:center;font-size:13px;color:var(--color-fg-muted)}
-.controls label{display:flex;gap:var(--gap-sm);align-items:center}
-select{font:inherit;font-size:13px;color:var(--color-fg);background-color:var(--color-panel);border:1px solid var(--color-border-line);border-radius:8px;padding:5px 8px}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--color-border-line);border-radius:999px;padding:3px;gap:2px;background:var(--color-panel)}
+.seg button{font:inherit;font-size:13px;font-weight:600;border:0;border-radius:999px;padding:6px 14px;background:transparent;color:var(--color-fg-muted);cursor:pointer;transition:background .15s,color .15s}
+.seg button:hover{color:var(--color-fg)}
+.seg button.on{background:var(--color-fg);color:var(--color-bg)}
+.seg button:focus-visible{outline:2px solid var(--c0);outline-offset:2px}
+.titlebox{display:flex;flex-direction:column;gap:var(--gap-sm)}
+.meta{display:flex;flex-wrap:wrap;gap:var(--gap-sm)}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--color-fg-muted);background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:999px;padding:4px 12px;font-variant-numeric:tabular-nums}
+.pill b{color:var(--color-fg);font-weight:600}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--color-ok);display:inline-block}
+.panel{background:var(--color-bg);border:1px solid var(--color-border-line);border-radius:14px;padding:20px 22px;box-shadow:var(--card-shadow)}
+.take-card{background:var(--color-panel)}
+.take-card .take{margin:0;font-size:15px}
+.controls{display:flex;gap:var(--gap-lg) 28px;flex-wrap:wrap;align-items:center;padding:12px 18px}
+.ctl{display:flex;gap:var(--gap-sm);align-items:center;flex-wrap:wrap}
+.ctl-l{font-size:13px;color:var(--color-fg-muted);font-weight:600}
+.callout{background:var(--color-panel);border-radius:8px;padding:10px 12px;margin:var(--gap-md) 0 0}
+.h-row{display:flex;justify-content:space-between;align-items:baseline;gap:var(--gap-md);flex-wrap:wrap;margin-bottom:var(--gap-sm)}
+.dt{font-size:13px}
+.dt thead th{position:sticky;top:0;background:var(--color-bg)}
+.dt tr.grp th{font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary);border-bottom:0;padding-bottom:0;text-align:center}
+.dt th:nth-child(2),.dt td:nth-child(2),.dt th:nth-child(6),.dt td:nth-child(6),.dt th:nth-child(9),.dt td:nth-child(9){border-left:1px solid var(--color-border-line)}
+.dt tr.grp th:nth-child(2),.dt tr.grp th:nth-child(3),.dt tr.grp th:nth-child(4){border-left:1px solid var(--color-border-line)}
+.dt td{vertical-align:top;padding:8px 10px;background:var(--color-bg)}
+.dt tbody tr:nth-child(even) td{background:var(--row-alt)}
+.dt tbody tr:hover td{background:var(--row-hover)}
+.dt tbody tr.latest td{background:var(--row-hi)}
+.dt tbody tr.latest .v{font-weight:700}
+.dt td:first-child,.dt th:first-child{position:sticky;left:0;z-index:1;font-weight:600;color:var(--color-fg)}
+.dt .v{display:block;color:var(--color-fg)}
+.dt .c{display:block;font-size:11px;font-weight:500;color:var(--text-secondary)}
+.dt .c.good{color:var(--color-ok)}.dt .c.bad{color:var(--color-bad)}
+.sec-h{margin:0 0 var(--gap-md)!important}
+.ngrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:var(--gap-md)}
+.ncard{background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:12px;padding:14px 16px}
+.ncard h3{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;margin:0 0 6px;color:var(--color-fg)}
+.ncard h3 i{width:8px;height:8px;border-radius:2px;flex:none}
+.ncard p{margin:0;font-size:13px;line-height:1.65;color:var(--color-fg-muted)}
+.ncard b{color:var(--color-fg)}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:var(--gap-md)}
-.card{background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:var(--radius);padding:16px}
+.card{background:var(--color-bg);border:1px solid var(--color-border-line);border-radius:14px;padding:16px 18px;box-shadow:var(--card-shadow)}
 .k-label{font-size:13px;color:var(--color-fg-muted)}
 .k-val{font-family:var(--serif);font-weight:400;font-size:30px;line-height:1.2;font-variant-numeric:tabular-nums;margin:var(--gap-xs) 0}
 .k-unit{font-size:13px;color:var(--color-fg-muted);margin-left:4px;font-family:var(--sans)}
@@ -69,24 +104,30 @@ details summary{cursor:pointer;color:var(--color-fg)}
 details ul{padding-left:18px;margin:var(--gap-sm) 0}
 details b{color:var(--color-fg)}
 .fail{font-size:13px;color:var(--color-bad);padding:12px 0}
-footer{font-size:12px;color:var(--color-fg-muted);border-top:1px solid var(--color-border-line);padding-top:var(--gap-md)}
-[data-l=en]{display:none}html[lang=en] [data-l=en]{display:revert}html[lang=en] [data-l=zh]{display:none}
-@media (max-width:600px){.lq{padding:20px 14px 32px}.lq h1{font-size:25px}}
+footer{font-size:12px;color:var(--color-fg-muted);text-align:center;padding:var(--gap-sm) 0}
+[data-l=en]{display:none!important}html[lang=en] [data-l=en]{display:grid!important}html[lang=en] [data-l=zh]{display:none!important}
+@media (max-width:600px){.lq{padding:20px 12px 32px}.lq h1{font-size:25px}.panel{padding:16px 14px}.controls{padding:12px 14px}}
 </style>
 </head>
 <body>
 <div class="lq">
   <header class="top" id="top">
-    <div>
+    <div class="titlebox">
       <h1 data-i18n="title">美股流动性与机构仓位跟踪</h1>
-      <p class="take" id="take">—</p>
+      <div class="meta">
+        <span class="pill"><i class="dot"></i><span data-i18n="mAsof">数据截至</span> <b id="m-asof">—</b></span>
+        <span class="pill"><span data-i18n="mCot">CFTC 持仓</span> <b id="m-cot">—</b></span>
+        <span class="pill"><span data-i18n="mUpd">最后更新</span> <b id="m-upd">—</b></span>
+      </div>
     </div>
-    <div class="langsw" role="group" aria-label="Language / 语言"><button type="button" data-lang="zh">中文</button><button type="button" data-lang="en">English</button></div>
+    <div class="seg" role="group" aria-label="Language / 语言"><button type="button" data-lang="zh">中文</button><button type="button" data-lang="en">English</button></div>
   </header>
 
-  <div class="controls" id="controls">
-    <label><span data-i18n="cIdx">对照指数</span> <select id="sel-idx"><option value="spx" data-i18n="nSpx">标普500（SPY）</option><option value="ndx" data-i18n="nNdx">纳斯达克100（QQQ）</option></select></label>
-    <label><span data-i18n="cRange">时间区间</span> <select id="sel-range"><option value="52" data-i18n="r1">近 1 年</option><option value="156" selected data-i18n="r3">近 3 年</option><option value="0" data-i18n="rAll">2018 年至今</option></select></label>
+  <section class="panel take-card"><p class="take" id="take">—</p></section>
+
+  <div class="controls panel" id="controls">
+    <div class="ctl"><span class="ctl-l" data-i18n="cIdx">对照指数</span><div class="seg" id="seg-idx" role="group"><button type="button" data-idx="spx" data-i18n="nSpx">标普500（SPY）</button><button type="button" data-idx="ndx" data-i18n="nNdx">纳斯达克100（QQQ）</button></div></div>
+    <div class="ctl"><span class="ctl-l" data-i18n="cRange">时间区间</span><div class="seg" id="seg-range" role="group"><button type="button" data-range="52" data-i18n="r1">近 1 年</button><button type="button" data-range="156" data-i18n="r3">近 3 年</button><button type="button" data-range="260" data-i18n="r5">近 5 年</button><button type="button" data-range="0" data-i18n="rAll">2018 年至今</button></div></div>
   </div>
 
   <section class="kpis" id="kpis">
@@ -97,81 +138,84 @@ footer{font-size:12px;color:var(--color-fg-muted);border-top:1px solid var(--col
     <div class="card"><div class="k-label" data-i18n="kCot">资产管理人 标普期货净多 / 未平仓量</div><div class="k-val"><span data-f="es_am">—</span><span class="k-unit">%</span></div><div class="k-sub" id="sub-cot">—</div></div>
   </section>
 
-  <section id="sec-main">
+  <section class="panel" id="sec-main">
     <h2 data-i18n="hMain">净流动性 vs 指数走势</h2>
     <p class="note" data-i18n="nMain"></p>
     <div class="legend"><span><i class="sw" style="background:var(--c0)"></i><span data-i18n="lNetL">净流动性（左轴，十亿美元）</span></span><span><i class="sw" style="background:var(--c1)"></i><span id="idxname">—</span><span data-i18n="rAxis">（右轴）</span></span></div>
     <div class="chart" id="chart-main"></div>
   </section>
 
-  <section id="sec-decomp">
+  <section class="panel" id="sec-decomp">
     <h2 data-i18n="hDec">净流动性每周变化：由哪一项驱动</h2>
     <p class="note" data-i18n="nDec"></p>
     <div class="legend"><span><i class="sw" style="background:var(--c0)"></i><span data-i18n="lFed">美联储资产变化</span></span><span><i class="sw" style="background:var(--c2)"></i><span data-i18n="lTga">−TGA 变化</span></span><span><i class="sw" style="background:var(--c3)"></i><span data-i18n="lRrp">−逆回购变化</span></span><span><i class="sw" style="background:var(--color-fg)"></i><span data-i18n="lNet">净变化</span></span></div>
     <div class="chart" id="chart-decomp"></div>
   </section>
 
-  <section id="sec-scatter">
+  <section class="panel" id="sec-scatter">
     <h2 data-i18n="hSc">流动性变化能否领先指数？</h2>
     <p class="note" id="note-sc">—</p>
     <div class="chart" id="chart-scatter"></div>
   </section>
 
   <section class="two" id="sec-risk">
-    <div>
+    <div class="panel">
       <h2 data-i18n="hHy">高收益债利差（%）</h2>
       <p class="note" data-i18n="nHy"></p>
       <div class="chart sm" id="chart-hy"></div>
     </div>
-    <div>
+    <div class="panel">
       <h2>VIX</h2>
       <p class="note" data-i18n="nVix"></p>
       <div class="chart sm" id="chart-vix"></div>
     </div>
   </section>
 
-  <section id="sec-cot">
+  <section class="panel" id="sec-cot">
     <h2><span data-i18n="hCot">期货仓位：</span><span id="cotname">—</span></h2>
     <p class="note" data-i18n="nCot"></p>
     <div class="legend"><span><i class="sw" style="background:var(--c0)"></i><span data-i18n="lAm">资产管理人</span></span><span><i class="sw" style="background:var(--c1)"></i><span data-i18n="lLev">杠杆基金</span></span></div>
     <div class="chart" id="chart-cot"></div>
-    <p class="note" id="note-cot">—</p>
+    <p class="note callout" id="note-cot">—</p>
   </section>
 
-  <section id="sec-table">
-    <h2 data-i18n="hTbl">最近 12 周明细</h2>
+  <section class="panel" id="sec-table">
+    <div class="h-row"><h2 data-i18n="hTbl">最近 12 周明细</h2><span class="note" style="margin:0" data-i18n="tHint">小字为与前一周相比的变化</span></div>
     <div class="tw">
-      <table>
-        <thead><tr><th data-i18n="tDate">日期</th><th data-i18n="tNet">净流动性</th><th data-i18n="tFed">美联储资产</th><th>TGA</th><th data-i18n="tRrp">逆回购</th><th data-i18n="tHy">HY 利差 %</th><th>NFCI</th><th>VIX</th><th data-i18n="tSpx">标普500</th><th data-i18n="tNdx">纳指100</th></tr></thead>
+      <table class="dt">
+        <thead>
+          <tr class="grp"><th></th><th colspan="4" data-i18n="gLiq">流动性（十亿美元）</th><th colspan="3" data-i18n="gRisk">风险指标</th><th colspan="2" data-i18n="gIdx">指数</th></tr>
+          <tr><th data-i18n="tDate">日期</th><th data-i18n="tNet">净流动性</th><th data-i18n="tFed">美联储资产</th><th>TGA</th><th data-i18n="tRrp">逆回购</th><th data-i18n="tHy">HY 利差 %</th><th>NFCI</th><th>VIX</th><th data-i18n="tSpx">标普500</th><th data-i18n="tNdx">纳指100</th></tr>
+        </thead>
         <tbody id="tbl"></tbody>
       </table>
     </div>
-    <p class="note" data-i18n="nTbl"></p>
+    <p class="note" style="margin:var(--gap-sm) 0 0" data-i18n="nTbl"></p>
   </section>
 
-  <details id="notes">
-    <summary data-i18n="sNotes">指标说明与使用方法</summary>
-    <ul data-l="zh">
-      <li><b>净流动性</b>：市场上常用的近似口径，跟踪美联储资产负债表扩张或缩减、财政部发债或花钱带来的美元流入流出。它与股市的中期走势有相关性，但不是因果定律。逆回购余额已经接近 0，它现在基本不再起缓冲作用，变化主要来自美联储资产和 TGA。</li>
-      <li><b>HY OAS</b>：ICE BofA 美国高收益债指数的期权调整利差，是信用市场的风险偏好温度计。</li>
-      <li><b>NFCI</b>：芝加哥联储金融状况指数，综合 100 多个金融市场指标；0 为历史平均，正值偏紧、负值偏松。芝加哥联储每周会修订历史值。</li>
-      <li><b>百分位</b>：当前值在最近 156 周（3 年）中低于它的数值所占比例。</li>
-      <li><b>COT</b>：每周五公布截至周二的持仓，滞后 3 天；只覆盖期货，看不到现货和场外衍生品，不代表机构整体买卖。</li>
-      <li><b>怎么用</b>：慢变量定方向（净流动性趋势、利差、仓位极端值），不要拿单周数据择时。仓位处于 3 年高位时，下跌中被动减仓的空间更大；处于低位时，反弹燃料更多。</li>
-      <li><b>自动更新</b>：每周六北京时间 21:17 自动从 2018 年起整段重取（周日再跑一次补漏）；任何一项数据取不到或异常，当周不更新，不插值、不补数。</li>
-      <li>数据来源：FRED（WALCL、WTREGEN、RRPONTSYD、BAMLH0A0HYM2、NFCI、VIXCLS、SP500、NASDAQ100）与 CFTC 公开报告（E-mini S&amp;P 500 代码 13874A，Nasdaq Mini 代码 209742），2018 年以来的周度数据。</li>
-    </ul>
-    <ul data-l="en">
-      <li><b>Net liquidity</b>: a common market proxy for dollar liquidity added or drained by the Fed's balance sheet and Treasury issuance and spending. It correlates with equities over months but is not a causal law. Reverse repo is now near zero and no longer acts as a buffer; changes come mainly from Fed assets and the TGA.</li>
-      <li><b>HY OAS</b>: option-adjusted spread of the ICE BofA US High Yield Index, a gauge of credit risk appetite.</li>
-      <li><b>NFCI</b>: Chicago Fed National Financial Conditions Index, built from 100+ market measures; 0 = average, positive tighter, negative looser. History is revised weekly.</li>
-      <li><b>Percentile</b>: share of the last 156 weeks (3 years) below the current value.</li>
-      <li><b>COT</b>: released Friday for Tuesday positions (3-day lag); futures only, so it does not show cash or OTC positions and is not total institutional buying or selling.</li>
-      <li><b>How to use</b>: let the slow variables set direction (net liquidity trend, spreads, positioning extremes); do not time trades on a single week. Near a 3-year high in positioning there is more room for forced selling in a decline; near a low, more fuel for a rebound.</li>
-      <li><b>Auto update</b>: every Saturday 13:17 UTC the full history since 2018 is re-fetched (retry on Sunday); if any source fails or looks wrong, nothing is updated that week and gaps are never filled.</li>
-      <li>Sources: FRED (WALCL, WTREGEN, RRPONTSYD, BAMLH0A0HYM2, NFCI, VIXCLS, SP500, NASDAQ100) and CFTC public reports (E-mini S&amp;P 500 code 13874A, Nasdaq Mini code 209742), weekly since 2018.</li>
-    </ul>
-  </details>
+  <section id="notes">
+    <h2 class="sec-h" data-i18n="sNotes">指标说明与使用方法</h2>
+    <div class="ngrid" data-l="zh">
+      <div class="ncard"><h3><i style="background:var(--c0)"></i>净流动性</h3><p>= 美联储总资产 − 财政部 TGA − 隔夜逆回购。衡量美联储和财政部带来的美元流入流出。与股市中期走势相关，但<b>不是因果定律</b>。逆回购已接近 0，变化主要来自美联储资产和 TGA。</p></div>
+      <div class="ncard"><h3><i style="background:var(--c1)"></i>HY 利差</h3><p>ICE BofA 美国高收益债指数的期权调整利差，是信用市场的风险偏好温度计。走阔 = 信用市场要求更高的风险补偿。FRED 只提供最近 3 年。</p></div>
+      <div class="ncard"><h3><i style="background:var(--c2)"></i>NFCI</h3><p>芝加哥联储金融状况指数，综合 100 多个金融市场指标。0 为历史平均，<b>正值偏紧</b>、负值偏松。历史值每周会被修订。</p></div>
+      <div class="ncard"><h3><i style="background:var(--c3)"></i>CFTC 持仓</h3><p>每周五公布截至周二的持仓，滞后 3 天。只覆盖期货，看不到现货和场外衍生品，不代表机构整体买卖。换月那周的一次性跳水是移仓噪音。</p></div>
+      <div class="ncard"><h3><i style="background:var(--c0)"></i>百分位</h3><p>当前值在最近 156 周（3 年）中低于它的数值所占比例。100 表示 3 年最高，0 表示 3 年最低。</p></div>
+      <div class="ncard"><h3><i style="background:var(--c1)"></i>怎么用</h3><p>慢变量定方向：净流动性趋势、利差、仓位极端值。<b>不要拿单周数据择时</b>。仓位处于 3 年高位时下跌中被动减仓空间更大，低位时反弹燃料更多。</p></div>
+      <div class="ncard"><h3><i style="background:var(--c2)"></i>自动更新</h3><p>每周六北京时间 21:17 自动从 2018 年起整段重取，周日再跑一次补漏。任何一项数据取不到或异常，当周不更新，不插值、不补数。</p></div>
+      <div class="ncard"><h3><i style="background:var(--c3)"></i>数据来源</h3><p>FRED：WALCL、WTREGEN、RRPONTSYD、BAMLH0A0HYM2、NFCI、VIXCLS、SP500、NASDAQ100。CFTC：E-mini S&amp;P 500（13874A）、Nasdaq Mini（209742）。</p></div>
+    </div>
+    <div class="ngrid" data-l="en">
+      <div class="ncard"><h3><i style="background:var(--c0)"></i>Net liquidity</h3><p>= Fed total assets − Treasury General Account − overnight reverse repo. Dollar liquidity added or drained by the Fed and the Treasury. Correlated with equities over months, but <b>not a causal law</b>. RRP is near zero, so changes come mainly from Fed assets and the TGA.</p></div>
+      <div class="ncard"><h3><i style="background:var(--c1)"></i>HY spread</h3><p>Option-adjusted spread of the ICE BofA US High Yield Index, a gauge of credit risk appetite. Wider = credit markets demand more compensation. FRED provides only the last 3 years.</p></div>
+      <div class="ncard"><h3><i style="background:var(--c2)"></i>NFCI</h3><p>Chicago Fed National Financial Conditions Index, built from 100+ market measures. 0 = average, <b>positive = tighter</b>, negative = looser. History is revised weekly.</p></div>
+      <div class="ncard"><h3><i style="background:var(--c3)"></i>CFTC positioning</h3><p>Released Friday for Tuesday positions (3-day lag). Futures only — no cash or OTC positions, so not total institutional buying or selling. One-off drops in roll weeks are noise.</p></div>
+      <div class="ncard"><h3><i style="background:var(--c0)"></i>Percentile</h3><p>Share of the last 156 weeks (3 years) below the current value. 100 = 3-year high, 0 = 3-year low.</p></div>
+      <div class="ncard"><h3><i style="background:var(--c1)"></i>How to use</h3><p>Let slow variables set direction: net liquidity trend, spreads, positioning extremes. <b>Do not time trades on a single week.</b> Near a 3-year positioning high there is more room for forced selling; near a low, more fuel for a rebound.</p></div>
+      <div class="ncard"><h3><i style="background:var(--c2)"></i>Auto update</h3><p>Every Saturday 13:17 UTC the full history since 2018 is re-fetched, with a retry on Sunday. If any source fails or looks wrong, nothing is updated that week; gaps are never filled.</p></div>
+      <div class="ncard"><h3><i style="background:var(--c3)"></i>Sources</h3><p>FRED: WALCL, WTREGEN, RRPONTSYD, BAMLH0A0HYM2, NFCI, VIXCLS, SP500, NASDAQ100. CFTC: E-mini S&amp;P 500 (13874A), Nasdaq Mini (209742).</p></div>
+    </div>
+  </section>
 
   <footer id="foot">—</footer>
 </div>
@@ -181,7 +225,7 @@ footer{font-size:12px;color:var(--color-fg-muted);border-top:1px solid var(--col
   const T = {
     zh: {
       title: '美股流动性与机构仓位跟踪', cIdx: '对照指数', cRange: '时间区间', nSpx: '标普500（SPY）', nNdx: '纳斯达克100（QQQ）',
-      r1: '近 1 年', r3: '近 3 年', rAll: '2018 年至今', bn: '十亿美元',
+      r1: '近 1 年', r3: '近 3 年', r5: '近 5 年', rAll: '2018 年至今', bn: '十亿美元', mAsof: '数据截至', mCot: 'CFTC 持仓', mUpd: '最后更新', tHint: '小字为与前一周相比的变化', gLiq: '流动性（十亿美元）', gRisk: '风险指标', gIdx: '指数',
       kNet: '美联储净流动性（周三）', kHy: '高收益债利差（HY OAS）', kVix: 'VIX（周三收盘）', kNfci: '芝加哥联储金融状况指数 NFCI', kCot: '资产管理人 标普期货净多 / 未平仓量',
       hMain: '净流动性 vs 指数走势', nMain: '净流动性 = 美联储总资产 − 财政部 TGA 账户 − 隔夜逆回购（RRP）。指数用 FRED 的指数点位代替 ETF 价格，走势与 SPY / QQQ 基本一致，但不含分红。',
       lNetL: '净流动性（左轴，十亿美元）', rAxis: '（右轴）',
@@ -192,7 +236,7 @@ footer{font-size:12px;color:var(--color-fg-muted);border-top:1px solid var(--col
       nVix: '20 以上通常意味着做市商撤单、盘口变薄，市场流动性变差。',
       hCot: '期货仓位：', nCot: 'CFTC 金融期货持仓（TFF），净多头 = 多头 − 空头，除以未平仓量。资产管理人以养老金、共同基金为主，偏长线；杠杆基金以对冲基金、CTA 为主，偏短线，常用期货对冲现货多头，所以长期为负很正常。每年 3、6、9、12 月中旬合约换月那一周会出现一次性大跳水，属于移仓噪音。',
       lAm: '资产管理人', lLev: '杠杆基金',
-      hTbl: '最近 12 周明细', tDate: '日期', tNet: '净流动性', tFed: '美联储资产', tRrp: '逆回购', tHy: 'HY 利差 %', tSpx: '标普500', tNdx: '纳指100',
+      hTbl: '最近 12 周明细', wd: ['周日','周一','周二','周三','周四','周五','周六'], tDate: '日期', tNet: '净流动性', tFed: '美联储资产', tRrp: '逆回购', tHy: 'HY 利差 %', tSpx: '标普500', tNdx: '纳指100',
       nTbl: '金额单位：十亿美元。美联储资产、TGA 为周三数值，逆回购、HY 利差为当周日均值，VIX 和指数为当周最后一个交易日收盘。',
       sNotes: '指标说明与使用方法',
       take: (v) => `截至 <b>${v.date}</b>，美联储净流动性为 <b>${v.net}</b> 十亿美元，比 13 周前变化 ${v.n13}；高收益债利差 <b>${v.hy}</b>%，处于近 3 年第 <b>${v.hyP}</b> 百分位；VIX 为 <b>${v.vix}</b>。期货端，资产管理人持有的标普 E-mini 净多头占未平仓量 <b>${v.es}</b>%（近 3 年第 <b>${v.esP}</b> 百分位），杠杆基金为 <b>${v.lev}</b>%。`,
@@ -212,7 +256,7 @@ footer{font-size:12px;color:var(--color-fg-muted);border-top:1px solid var(--col
     },
     en: {
       title: 'US Liquidity & Positioning Tracker', cIdx: 'Index', cRange: 'Range', nSpx: 'S&P 500 (SPY)', nNdx: 'Nasdaq-100 (QQQ)',
-      r1: 'Last 1 year', r3: 'Last 3 years', rAll: 'Since 2018', bn: '$bn',
+      r1: '1 year', r3: '3 years', r5: '5 years', rAll: 'Since 2018', bn: '$bn', mAsof: 'Data as of', mCot: 'CFTC positions', mUpd: 'Last updated', tHint: 'Small figures: change from the previous week', gLiq: 'Liquidity ($bn)', gRisk: 'Risk gauges', gIdx: 'Indices',
       kNet: 'Fed net liquidity (Wednesday)', kHy: 'High-yield spread (HY OAS)', kVix: 'VIX (Wednesday close)', kNfci: 'Chicago Fed NFCI', kCot: 'Asset managers: S&P futures net long / OI',
       hMain: 'Net liquidity vs the index', nMain: 'Net liquidity = Fed total assets − Treasury General Account (TGA) − overnight reverse repo (RRP). FRED index levels stand in for ETF prices; moves match SPY / QQQ closely, excluding dividends.',
       lNetL: 'Net liquidity (left axis, $bn)', rAxis: ' (right axis)',
@@ -223,7 +267,7 @@ footer{font-size:12px;color:var(--color-fg-muted);border-top:1px solid var(--col
       nVix: 'Above 20, market makers usually pull quotes and order books thin out, so liquidity worsens.',
       hCot: 'Futures positioning: ', nCot: 'CFTC Traders in Financial Futures. Net long = long − short, divided by open interest. Asset managers (pensions, mutual funds) are longer-term; leveraged funds (hedge funds, CTAs) are shorter-term and often hedge cash longs with futures, so a net short is normal. Roll weeks in mid March / June / September / December show one-off drops — roll noise.',
       lAm: 'Asset managers', lLev: 'Leveraged funds',
-      hTbl: 'Last 12 weeks', tDate: 'Date', tNet: 'Net liquidity', tFed: 'Fed assets', tRrp: 'Reverse repo', tHy: 'HY spread %', tSpx: 'S&P 500', tNdx: 'Nasdaq-100',
+      hTbl: 'Last 12 weeks', wd: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], tDate: 'Date', tNet: 'Net liquidity', tFed: 'Fed assets', tRrp: 'Reverse repo', tHy: 'HY spread %', tSpx: 'S&P 500', tNdx: 'Nasdaq-100',
       nTbl: 'Amounts in $bn. Fed assets and TGA are Wednesday levels; reverse repo and HY spread are weekly averages; VIX and indices are the last close of the week.',
       sNotes: 'Definitions and how to use this',
       take: (v) => `As of <b>${v.date}</b>, Fed net liquidity is <b>${v.net}</b> $bn, ${v.n13} versus 13 weeks ago; the high-yield spread is <b>${v.hy}</b>%, at the <b>${v.hyP}</b>th percentile of the last 3 years; VIX is <b>${v.vix}</b>. In futures, asset managers' net long in S&P E-mini is <b>${v.es}</b>% of open interest (<b>${v.esP}</b>th percentile of 3 years), leveraged funds <b>${v.lev}</b>%.`,
@@ -392,13 +436,40 @@ footer{font-size:12px;color:var(--color-fg-muted);border-top:1px solid var(--col
     document.getElementById('idxname').textContent = t('idx')[S.idx];
     document.getElementById('cotname').textContent = t('cotName')[S.idx];
     document.getElementById('foot').textContent = t('foot')(LIQ[0].date, LIQ[LIQ.length - 1].date, meta.updated || '');
+    const wd = (d) => `${d}（${t('wd')[new Date(d + 'T12:00:00Z').getUTCDay()]}）`.replace('（', lang === 'zh' ? '（' : ' (').replace('）', lang === 'zh' ? '）' : ')');
+    document.getElementById('m-asof').textContent = wd(LT.date);
+    document.getElementById('m-cot').textContent = wd(LT.cot_date);
+    let upd = meta.updated || '—';
+    const um = /^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}) UTC$/.exec(upd);
+    if (um) {
+      const dt = new Date(`${um[1]}T${um[2]}:00Z`);
+      try { upd = dt.toLocaleString(lang === 'zh' ? 'zh-CN' : 'en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false, timeZoneName: 'short' }); } catch (e) {}
+    }
+    document.getElementById('m-upd').textContent = upd;
     const tb = document.getElementById('tbl'); tb.replaceChildren();
-    const cols = [['date', String], ['net', f(',.0f')], ['fed', f(',.0f')], ['tga', f(',.0f')], ['rrp', f(',.0f')], ['hy', f('.2f')], ['nfci', f('.3f')], ['vix', f('.1f')], ['spx', f(',.0f')], ['ndx', f(',.0f')]];
-    for (const r of LIQ.slice(-12).reverse()) {
-      const tr = document.createElement('tr');
-      for (const [c, fm] of cols) { const td = document.createElement('td'); const v = r[c]; td.textContent = v == null ? '—' : fm(v); tr.append(td); }
+    // [列, 数值格式, 变化格式, 变化方向: 1 上升为好, -1 上升为坏, 0 不着色, 'pct' 显示百分比]
+    const cols = [['net', ',.0f', '+,.0f', 1], ['fed', ',.0f', '+,.0f', 1], ['tga', ',.0f', '+,.0f', -1], ['rrp', ',.0f', '+,.0f', -1], ['hy', '.2f', '+.2f', -1], ['nfci', '.3f', '+.3f', -1], ['vix', '.1f', '+.1f', -1], ['spx', ',.0f', 'pct', 1], ['ndx', ',.0f', 'pct', 1]];
+    const N = LIQ.length;
+    for (let q = N - 1; q >= Math.max(1, N - 12); q--) {
+      const r = LIQ[q], pr = LIQ[q - 1];
+      const tr = document.createElement('tr'); if (q === N - 1) tr.className = 'latest';
+      const d0 = document.createElement('td'); d0.textContent = r.date; tr.append(d0);
+      for (const [c, fm, cf, good] of cols) {
+        const td = document.createElement('td'); const v = r[c], pv = pr[c];
+        const sv = document.createElement('span'); sv.className = 'v'; sv.textContent = v == null ? '—' : f(fm)(v); td.append(sv);
+        if (v != null && pv != null) {
+          const ch = cf === 'pct' ? 100 * (v / pv - 1) : v - pv;
+          const sc = document.createElement('span');
+          sc.className = 'c' + (ch * good > 0 ? ' good' : ch * good < 0 ? ' bad' : '');
+          sc.textContent = cf === 'pct' ? f('+.1f')(ch) + '%' : f(cf)(ch);
+          td.append(sc);
+        }
+        tr.append(td);
+      }
       tb.append(tr);
     }
+    document.querySelectorAll('[data-idx]').forEach((b) => b.classList.toggle('on', b.dataset.idx === S.idx));
+    document.querySelectorAll('[data-range]').forEach((b) => b.classList.toggle('on', +b.dataset.range === S.range));
   }
 
   // ---------- charts ----------
@@ -507,13 +578,12 @@ footer{font-size:12px;color:var(--color-fg-muted);border-top:1px solid var(--col
 
   const ALL = [cMain, cDecomp, cScatter, cHy, cVix, cCot];
   const drawAll = () => ALL.forEach((fn) => fn());
-  const selIdx = document.getElementById('sel-idx'), selRange = document.getElementById('sel-range');
-  selIdx.addEventListener('change', () => { S.idx = selIdx.value; drawText(); cMain(); cScatter(); cCot(); });
-  selRange.addEventListener('change', () => { S.range = +selRange.value; cMain(); cDecomp(); cHy(); cVix(); cCot(); });
+  document.querySelectorAll('[data-idx]').forEach((b) => b.addEventListener('click', () => { if (S.idx === b.dataset.idx) return; S.idx = b.dataset.idx; drawText(); cMain(); cScatter(); cCot(); }));
+  document.querySelectorAll('[data-range]').forEach((b) => b.addEventListener('click', () => { if (S.range === +b.dataset.range) return; S.range = +b.dataset.range; drawText(); cMain(); cDecomp(); cHy(); cVix(); cCot(); }));
   document.querySelectorAll('[data-lang]').forEach((b) => b.addEventListener('click', () => {
     if (lang === b.dataset.lang) return;
     lang = b.dataset.lang; try { localStorage.setItem('usl-lang', lang); } catch (e) {}
-    drawText(); selIdx.value = S.idx; selRange.value = String(S.range); drawAll();
+    drawText(); drawAll();
   }));
   let rw = 0;
   const root = document.querySelector('.lq');
