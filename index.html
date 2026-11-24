@@ -685,7 +685,8 @@ footer{font-size:13.5px;color:var(--color-fg-muted);text-align:center;padding:va
       const node = document.querySelector('.lq');
       const w = node.scrollWidth, h = node.scrollHeight;
       const pr = Math.max(0.5, Math.min(2, Math.sqrt(16e6 / (w * h)), 16000 / h, 16000 / w)); // 总像素约 1,600 万以内、单边不超过 16,000，手机浏览器也能生成
-      const blob = await window.htmlToImage.toBlob(node, { pixelRatio: pr, backgroundColor: getComputedStyle(root).getPropertyValue('--page-bg').trim(), cacheBust: true });
+      // 报告区块在宽屏上靠 margin:auto 居中；截图时把外边距清零，否则整张图会向右偏移、右半边被裁掉
+      const blob = await window.htmlToImage.toBlob(node, { pixelRatio: pr, width: w, height: h, style: { margin: '0' }, backgroundColor: getComputedStyle(root).getPropertyValue('--page-bg').trim(), cacheBust: true });
       const name = `USLiquidity_${LT.date}_${lang}.png`;
       const file = new File([blob], name, { type: 'image/png' });
       if (matchMedia('(pointer:coarse)').matches && navigator.canShare && navigator.canShare({ files: [file] })) {
