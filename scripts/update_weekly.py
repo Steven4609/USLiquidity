@@ -35,7 +35,6 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
 F_LIQ = DATA / "liquidity_weekly.csv"
 F_COT = DATA / "cot_equity_index.csv"
-F_DASH = DATA / "dashboard_data.json"
 F_LATEST = DATA / "latest.json"
 F_FINRA = DATA / "finra_short_daily.csv"
 FINRA_START = date(2018, 8, 1)
@@ -282,34 +281,9 @@ COT_HEADER = ["date", "es_am_pct", "es_lev_pct", "nq_am_pct", "nq_lev_pct"]
 
 
 def build_outputs(updated: str):
-    """由两个 CSV 生成网页读取的 dashboard_data.json 和 latest.json（只做对齐，不改数字）。"""
+    """生成 latest.json：最新一周的数值和本次更新时间（网页标题旁的“最后更新”读这里）。"""
     liq, cot = read_csv(F_LIQ), read_csv(F_COT)
     num = lambda v: None if v == "" else float(v)
-    D = {k: [] for k in ["d", "fed", "tga", "rrp", "net", "hy", "nfci", "vix", "spx", "ndx",
-                         "sofr", "sofr_max", "spy_dpi", "qqq_dpi",
-                         "cd", "es_am", "es_lev", "nq_am", "nq_lev"]}
-    for r in liq:
-        D["d"].append(r[0])
-        for k, v in zip(["fed", "tga", "rrp", "net", "hy", "nfci", "vix", "spx", "ndx", "sofr", "sofr_max", "spy_dpi", "qqq_dpi"], r[1:]):
-            D[k].append(num(v))
-    # COT 报告日（通常周二）对齐到当周周三：取 >= 报告日的第一个周三，且相差不超过 6 天
-    n = len(D["d"])
-    for k in ["cd", "es_am", "es_lev", "nq_am", "nq_lev"]:
-        D[k] = [None] * n
-    j = 0
-    for r in cot:
-        while j < n and D["d"][j] < r[0]:
-            j += 1
-        if j >= n:
-            break
-        gap = (datetime.fromisoformat(D["d"][j]) - datetime.fromisoformat(r[0])).days
-        if 0 <= gap <= 6:
-            D["cd"][j] = r[0]
-            for k, v in zip(["es_am", "es_lev", "nq_am", "nq_lev"], r[1:]):
-                D[k][j] = num(v)
-    D["updated"] = updated
-    D["cot_last"] = cot[-1][0] if cot else None
-    F_DASH.write_text(json.dumps(D, ensure_ascii=False, separators=(",", ":")))
     last = liq[-1]
     latest = {"date": last[0], "cot_date": cot[-1][0] if cot else None, "updated": updated,
               **{k: num(v) for k, v in zip(LIQ_HEADER[1:], last[1:])},
@@ -354,9 +328,6 @@ def check_sources():
 def main():
     if "--check" in sys.argv:
         sys.exit(0 if check_sources() else 1)
-    if "--rebuild" in sys.argv:  # 只用已有 CSV 重新生成网页数据，不联网
-        build_outputs(json.loads(F_LATEST.read_text())["updated"] if F_LATEST.exists() else "")
-        return
     DATA.mkdir(exist_ok=True)
     try:
         liq, cot = build_liquidity(), build_cot()
@@ -367,7 +338,7 @@ def main():
         log(f"本次不更新：{e}")
         sys.exit(1)
     write_csv(F_FINRA, FINRA_HEADER, finra)  # 原始日度数据总是保存（只增不改历史）
-    if liq == read_csv(F_LIQ) and cot == read_csv(F_COT) and F_DASH.exists():
+    if liq == read_csv(F_LIQ) and cot == read_csv(F_COT) and F_LATEST.exists():
         log(f"没有新数据（最新仍是 {liq[-1][0]} / COT {cot[-1][0]}），不改动文件")
         return
     write_csv(F_LIQ, LIQ_HEADER, liq)

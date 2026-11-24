@@ -17,7 +17,6 @@
 | `data/finra_short_daily.csv` | 每日：SPY / QQQ 在 FINRA 场外成交中的卖空量与总量（2018-08 起，只增不改；目前只存数据，未在网页展示） |
 | `data/cot_equity_index.csv` | 周度：资产管理人、杠杆基金在标普 / 纳指期货的净多头占未平仓量（%） |
 | `data/latest.json` | 最近一次更新的日期和数值 |
-| `data/dashboard_data.json` | 网页读取的合并数据（由脚本自动生成，不用手动改） |
 | `scripts/update_weekly.py` | 每周取数与计算脚本 |
 | `.github/workflows/weekly-update.yml` | 每周定时任务 |
 
