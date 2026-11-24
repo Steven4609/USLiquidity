@@ -12,6 +12,7 @@
 | 文件 | 内容 |
 |---|---|
 | `index.html` | 报告网页（中英文可切换，图表用 d3 绘制） |
+| `bg-market.jpg` | 背景照片（Nicholas Cappello / Unsplash） |
 | `data/liquidity_weekly.csv` | 周度：美联储总资产、TGA、逆回购、净流动性（十亿美元）、HY 利差、NFCI、VIX、标普500、纳指100 |
 | `data/cot_equity_index.csv` | 周度：资产管理人、杠杆基金在标普 / 纳指期货的净多头占未平仓量（%） |
 | `data/latest.json` | 最近一次更新的日期和数值 |
