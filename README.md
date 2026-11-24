@@ -4,7 +4,7 @@
 以及机构在标普500 / 纳指100 股指期货上的仓位（CFTC），对照标普500（SPY）和纳指100（QQQ）走势。
 **每周六自动取数更新**，不需要任何人操作。
 
-- 报告网页：`https://steven4609.github.io/usliquidity/`
+- 报告网页：`https://steven4609.github.io/USLiquidity/`
 - 数据文件：本仓库的 [`data/`](data/) 文件夹（CSV 可直接用 Excel 打开，也可用 Power Query 连接原始文件网址）
 
 ## 文件说明
