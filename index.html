@@ -70,7 +70,7 @@ body{margin:0;background:var(--page-bg);color:var(--color-fg);font:16px/1.6 var(
 .dt{font-size:14.5px}
 .dt thead th{background:transparent}
 .dt tr.grp th{font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary);border-bottom:0;padding-bottom:0;text-align:center}
-.dt th:nth-child(2),.dt td:nth-child(2),.dt th:nth-child(6),.dt td:nth-child(6),.dt th:nth-child(9),.dt td:nth-child(9){border-left:1px solid var(--color-border-line)}
+.dt th:nth-child(2),.dt td:nth-child(2),.dt th:nth-child(6),.dt td:nth-child(6),.dt th:nth-child(10),.dt td:nth-child(10){border-left:1px solid var(--color-border-line)}
 .dt tr.grp th:nth-child(2),.dt tr.grp th:nth-child(3),.dt tr.grp th:nth-child(4){border-left:1px solid var(--color-border-line)}
 .dt td{vertical-align:top;padding:8px 10px;background:transparent}
 .dt tbody tr:nth-child(even) td{background:var(--row-alt)}
@@ -89,7 +89,9 @@ body{margin:0;background:var(--page-bg);color:var(--color-fg);font:16px/1.6 var(
 .ncard h3 i{width:8px;height:8px;border-radius:2px;flex:none}
 .ncard p{margin:0;font-size:14.5px;line-height:1.65;color:var(--color-fg-muted)}
 .ncard b{color:var(--color-fg)}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:var(--gap-md)}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--gap-md)}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.kpis{grid-template-columns:minmax(0,1fr)}}
 .card{padding:18px 20px}
 .k-label{font-size:14.5px;color:var(--color-fg-muted)}
 .k-val{font-family:var(--serif);font-weight:400;font-size:36px;line-height:1.2;font-variant-numeric:tabular-nums;margin:var(--gap-xs) 0}
@@ -153,6 +155,7 @@ footer{font-size:13.5px;color:var(--color-fg-muted);text-align:center;padding:va
     <div class="card"><div class="k-label" data-i18n="kHy">高收益债利差（HY OAS）</div><div class="k-val"><span data-f="hy">—</span><span class="k-unit">%</span></div><div class="k-sub" id="sub-hy">—</div></div>
     <div class="card"><div class="k-label" data-i18n="kVix">VIX（周三收盘）</div><div class="k-val"><span data-f="vix">—</span></div><div class="k-sub" id="sub-vix">—</div></div>
     <div class="card"><div class="k-label" data-i18n="kNfci">芝加哥联储金融状况指数 NFCI</div><div class="k-val"><span data-f="nfci">—</span></div><div class="k-sub" id="sub-nfci">—</div></div>
+    <div class="card"><div class="k-label" data-i18n="kSofr">资金市场利差 SOFR − IORB</div><div class="k-val"><span data-f="sofr">—</span><span class="k-unit" data-i18n="bp">基点</span></div><div class="k-sub" id="sub-sofr">—</div></div>
     <div class="card"><div class="k-label" data-i18n="kCot">资产管理人 标普期货净多 / 未平仓量</div><div class="k-val"><span data-f="es_am">—</span><span class="k-unit">%</span></div><div class="k-sub" id="sub-cot">—</div></div>
   </section>
 
@@ -174,6 +177,13 @@ footer{font-size:13.5px;color:var(--color-fg-muted);text-align:center;padding:va
     <h2 data-i18n="hSc">流动性变化能否领先指数？</h2>
     <p class="note" id="note-sc">—</p>
     <div class="chart" id="chart-scatter"></div>
+  </section>
+
+  <section class="panel" id="sec-sofr">
+    <h2 data-i18n="hSofr">资金市场压力：SOFR − IORB（基点）</h2>
+    <p class="note" data-i18n="nSofr"></p>
+    <div class="legend"><span><i class="sw" style="background:var(--c0)"></i><span data-i18n="lSofrAvg">当周日均</span></span><span><i class="sw" style="background:var(--c1)"></i><span data-i18n="lSofrMax">当周单日最高</span></span></div>
+    <div class="chart" id="chart-sofr"></div>
   </section>
 
   <section class="two" id="sec-risk">
@@ -202,8 +212,8 @@ footer{font-size:13.5px;color:var(--color-fg-muted);text-align:center;padding:va
     <div class="tw">
       <table class="dt">
         <thead>
-          <tr class="grp"><th></th><th colspan="4" data-i18n="gLiq">流动性（十亿美元）</th><th colspan="3" data-i18n="gRisk">风险指标</th><th colspan="2" data-i18n="gIdx">指数</th></tr>
-          <tr><th data-i18n="tDate">日期</th><th data-i18n="tNet">净流动性</th><th data-i18n="tFed">美联储资产</th><th>TGA</th><th data-i18n="tRrp">逆回购</th><th data-i18n="tHy">HY 利差 %</th><th>NFCI</th><th>VIX</th><th data-i18n="tSpx">标普500</th><th data-i18n="tNdx">纳指100</th></tr>
+          <tr class="grp"><th></th><th colspan="4" data-i18n="gLiq">流动性（十亿美元）</th><th colspan="4" data-i18n="gRisk">风险指标</th><th colspan="2" data-i18n="gIdx">指数</th></tr>
+          <tr><th data-i18n="tDate">日期</th><th data-i18n="tNet">净流动性</th><th data-i18n="tFed">美联储资产</th><th>TGA</th><th data-i18n="tRrp">逆回购</th><th data-i18n="tHy">HY 利差 %</th><th>NFCI</th><th data-i18n="tSofr">SOFR 利差 bp</th><th>VIX</th><th data-i18n="tSpx">标普500</th><th data-i18n="tNdx">纳指100</th></tr>
         </thead>
         <tbody id="tbl"></tbody>
       </table>
@@ -221,7 +231,8 @@ footer{font-size:13.5px;color:var(--color-fg-muted);text-align:center;padding:va
       <div class="ncard"><h3><i style="background:var(--c0)"></i>百分位</h3><p>当前值在最近 156 周（3 年）中低于它的数值所占比例。100 表示 3 年最高，0 表示 3 年最低。</p></div>
       <div class="ncard"><h3><i style="background:var(--c1)"></i>怎么用</h3><p>慢变量定方向：净流动性趋势、利差、仓位极端值。<b>不要拿单周数据择时</b>。仓位处于 3 年高位时下跌中被动减仓空间更大，低位时反弹燃料更多。</p></div>
       <div class="ncard"><h3><i style="background:var(--c2)"></i>自动更新</h3><p>每周六北京时间 21:17 自动从 2018 年起整段重取，周日再跑一次补漏。任何一项数据取不到或异常，当周不更新，不插值、不补数。</p></div>
-      <div class="ncard"><h3><i style="background:var(--c3)"></i>数据来源</h3><p>FRED：WALCL、WTREGEN、RRPONTSYD、BAMLH0A0HYM2、NFCI、VIXCLS、SP500、NASDAQ100。CFTC：E-mini S&amp;P 500（13874A）、Nasdaq Mini（209742）。</p></div>
+      <div class="ncard"><h3><i style="background:var(--c1)"></i>SOFR − IORB</h3><p>隔夜担保融资利率减去美联储给银行准备金的利率。平时为负或接近 0；<b>明显转正说明银行间缺钱</b>，2019 年 9 月回购危机时单日飙到 +315 基点。看单日最高比看均值更早发现压力。</p></div>
+      <div class="ncard"><h3><i style="background:var(--c3)"></i>数据来源</h3><p>FRED：WALCL、WTREGEN、RRPONTSYD、BAMLH0A0HYM2、NFCI、VIXCLS、SP500、NASDAQ100、SOFR、IORB（2021 年 7 月前用 IOER）。CFTC：E-mini S&amp;P 500（13874A）、Nasdaq Mini（209742）。</p></div>
     </div>
     <div class="ngrid" data-l="en">
       <div class="ncard"><h3><i style="background:var(--c0)"></i>Net liquidity</h3><p>= Fed total assets − Treasury General Account − overnight reverse repo. Dollar liquidity added or drained by the Fed and the Treasury. Correlated with equities over months, but <b>not a causal law</b>. RRP is near zero, so changes come mainly from Fed assets and the TGA.</p></div>
@@ -231,7 +242,8 @@ footer{font-size:13.5px;color:var(--color-fg-muted);text-align:center;padding:va
       <div class="ncard"><h3><i style="background:var(--c0)"></i>Percentile</h3><p>Share of the last 156 weeks (3 years) below the current value. 100 = 3-year high, 0 = 3-year low.</p></div>
       <div class="ncard"><h3><i style="background:var(--c1)"></i>How to use</h3><p>Let slow variables set direction: net liquidity trend, spreads, positioning extremes. <b>Do not time trades on a single week.</b> Near a 3-year positioning high there is more room for forced selling; near a low, more fuel for a rebound.</p></div>
       <div class="ncard"><h3><i style="background:var(--c2)"></i>Auto update</h3><p>Every Saturday 13:17 UTC the full history since 2018 is re-fetched, with a retry on Sunday. If any source fails or looks wrong, nothing is updated that week; gaps are never filled.</p></div>
-      <div class="ncard"><h3><i style="background:var(--c3)"></i>Sources</h3><p>FRED: WALCL, WTREGEN, RRPONTSYD, BAMLH0A0HYM2, NFCI, VIXCLS, SP500, NASDAQ100. CFTC: E-mini S&amp;P 500 (13874A), Nasdaq Mini (209742).</p></div>
+      <div class="ncard"><h3><i style="background:var(--c1)"></i>SOFR − IORB</h3><p>Secured overnight funding rate minus the rate the Fed pays on bank reserves. Normally negative or near zero; <b>a clearly positive spread means banks are short of cash</b> — it hit +315 bp on one day in the September 2019 repo squeeze. The weekly high flags stress earlier than the average.</p></div>
+      <div class="ncard"><h3><i style="background:var(--c3)"></i>Sources</h3><p>FRED: WALCL, WTREGEN, RRPONTSYD, BAMLH0A0HYM2, NFCI, VIXCLS, SP500, NASDAQ100, SOFR, IORB (IOER before July 2021). CFTC: E-mini S&amp;P 500 (13874A), Nasdaq Mini (209742).</p></div>
     </div>
   </section>
 
@@ -249,7 +261,9 @@ footer{font-size:13.5px;color:var(--color-fg-muted);text-align:center;padding:va
       lNetL: '净流动性（左轴，十亿美元）', rAxis: '（右轴）',
       hDec: '净流动性每周变化：由哪一项驱动', nDec: '柱子按来源拆分：美联储资产变化、TGA 变化取反（TGA 增加 = 抽走流动性）、逆回购变化取反。圆点为当周净变化。TGA 在报税月和发债高峰会大幅波动，单周数据噪音大，看连续几周的方向更有意义。',
       lFed: '美联储资产变化', lTga: '−TGA 变化', lRrp: '−逆回购变化', lNet: '净变化',
-      hSc: '流动性变化能否领先指数？', hHy: '高收益债利差（%）',
+      hSc: '流动性变化能否领先指数？', hHy: '高收益债利差（%）', kSofr: '资金市场利差 SOFR − IORB', bp: '基点', hSofr: '资金市场压力：SOFR − IORB（基点）', lSofrAvg: '当周日均', lSofrMax: '当周单日最高', tSofr: 'SOFR 利差 bp', sofrL: 'SOFR − IORB',
+      nSofr: 'SOFR 是银行之间用国债抵押借隔夜资金的利率，IORB 是美联储付给银行准备金的利率（2021 年 7 月前为 IOER）。正常时银行宁可把钱放在美联储，SOFR 低于 IORB；利差转正、尤其单日跳升，说明准备金变紧、有人愿意付更高利息借钱，是流动性压力的早期信号。月末、季末和缴税日常有短暂跳升，持续多周偏高才值得警惕。',
+      subSofr: (mx, a, p) => `当周单日最高 ${mx} 基点 · 4 周变化 ${a} · 近 3 年第 ${p} 百分位`,
       nHy: '利差走阔代表信用市场在为风险要更高补偿，往往与股市回撤同时发生。FRED 只提供 ICE 指数最近 3 年的数据。',
       nVix: '20 以上通常意味着做市商撤单、盘口变薄，市场流动性变差。',
       hCot: '期货仓位：', nCot: 'CFTC 金融期货持仓（TFF），净多头 = 多头 − 空头，除以未平仓量。资产管理人以养老金、共同基金为主，偏长线；杠杆基金以对冲基金、CTA 为主，偏短线，常用期货对冲现货多头，所以长期为负很正常。每年 3、6、9、12 月中旬合约换月那一周会出现一次性大跳水，属于移仓噪音。',
@@ -257,7 +271,7 @@ footer{font-size:13.5px;color:var(--color-fg-muted);text-align:center;padding:va
       hTbl: '最近 12 周明细', wd: ['周日','周一','周二','周三','周四','周五','周六'], tDate: '日期', tNet: '净流动性', tFed: '美联储资产', tRrp: '逆回购', tHy: 'HY 利差 %', tSpx: '标普500', tNdx: '纳指100',
       nTbl: '金额单位：十亿美元。美联储资产、TGA 为周三数值，逆回购、HY 利差为当周日均值，VIX 和指数为当周最后一个交易日收盘。',
       sNotes: '指标说明与使用方法',
-      take: (v) => `截至 <b>${v.date}</b>，美联储净流动性为 <b>${v.net}</b> 十亿美元，比 13 周前变化 ${v.n13}；高收益债利差 <b>${v.hy}</b>%，处于近 3 年第 <b>${v.hyP}</b> 百分位；VIX 为 <b>${v.vix}</b>。期货端，资产管理人持有的标普 E-mini 净多头占未平仓量 <b>${v.es}</b>%（近 3 年第 <b>${v.esP}</b> 百分位），杠杆基金为 <b>${v.lev}</b>%。`,
+      take: (v) => `截至 <b>${v.date}</b>，美联储净流动性为 <b>${v.net}</b> 十亿美元，比 13 周前变化 ${v.n13}；高收益债利差 <b>${v.hy}</b>%，处于近 3 年第 <b>${v.hyP}</b> 百分位；VIX 为 <b>${v.vix}</b>；资金市场利差 SOFR − IORB 为 <b>${v.sofr}</b> 基点。期货端，资产管理人持有的标普 E-mini 净多头占未平仓量 <b>${v.es}</b>%（近 3 年第 <b>${v.esP}</b> 百分位），杠杆基金为 <b>${v.lev}</b>%。`,
       subNet: (a, b) => `较 13 周前 ${a} · 较 52 周前 ${b}`,
       subHy: (a, p) => `4 周变化 ${a} 个百分点 · 近 3 年第 ${p} 百分位`,
       subVix: (a, p) => `4 周变化 ${a} · 近 3 年第 ${p} 百分位`,
@@ -280,7 +294,9 @@ footer{font-size:13.5px;color:var(--color-fg-muted);text-align:center;padding:va
       lNetL: 'Net liquidity (left axis, $bn)', rAxis: ' (right axis)',
       hDec: 'Weekly change in net liquidity: what drove it', nDec: 'Bars split the change by source: change in Fed assets, minus the change in TGA (a rising TGA drains liquidity), minus the change in reverse repo. Dots are the net weekly change. The TGA swings around tax dates and heavy issuance, so read the direction over several weeks.',
       lFed: 'Δ Fed assets', lTga: '−Δ TGA', lRrp: '−Δ reverse repo', lNet: 'Net change',
-      hSc: 'Does liquidity lead the index?', hHy: 'High-yield spread (%)',
+      hSc: 'Does liquidity lead the index?', hHy: 'High-yield spread (%)', kSofr: 'Funding spread SOFR − IORB', bp: 'bp', hSofr: 'Funding stress: SOFR − IORB (bp)', lSofrAvg: 'Weekly average', lSofrMax: 'Weekly daily high', tSofr: 'SOFR spread bp', sofrL: 'SOFR − IORB',
+      nSofr: 'SOFR is the rate banks pay to borrow overnight against Treasuries; IORB is the rate the Fed pays on bank reserves (IOER before July 2021). Normally banks would rather leave cash at the Fed, so SOFR sits below IORB. A positive spread, especially a one-day jump, means reserves are getting scarce and someone will pay up for cash — an early sign of liquidity stress. Month-end, quarter-end and tax dates cause brief spikes; only a spread that stays high for weeks is a warning.',
+      subSofr: (mx, a, p) => `weekly daily high ${mx} bp · 4-week change ${a} · ${p}th percentile of 3 yrs`,
       nHy: 'A wider spread means credit markets demand more compensation for risk; it often widens alongside equity drawdowns. FRED only provides the last 3 years of the ICE index.',
       nVix: 'Above 20, market makers usually pull quotes and order books thin out, so liquidity worsens.',
       hCot: 'Futures positioning: ', nCot: 'CFTC Traders in Financial Futures. Net long = long − short, divided by open interest. Asset managers (pensions, mutual funds) are longer-term; leveraged funds (hedge funds, CTAs) are shorter-term and often hedge cash longs with futures, so a net short is normal. Roll weeks in mid March / June / September / December show one-off drops — roll noise.',
@@ -288,7 +304,7 @@ footer{font-size:13.5px;color:var(--color-fg-muted);text-align:center;padding:va
       hTbl: 'Last 12 weeks', wd: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], tDate: 'Date', tNet: 'Net liquidity', tFed: 'Fed assets', tRrp: 'Reverse repo', tHy: 'HY spread %', tSpx: 'S&P 500', tNdx: 'Nasdaq-100',
       nTbl: 'Amounts in $bn. Fed assets and TGA are Wednesday levels; reverse repo and HY spread are weekly averages; VIX and indices are the last close of the week.',
       sNotes: 'Definitions and how to use this',
-      take: (v) => `As of <b>${v.date}</b>, Fed net liquidity is <b>${v.net}</b> $bn, ${v.n13} versus 13 weeks ago; the high-yield spread is <b>${v.hy}</b>%, at the <b>${v.hyP}</b>th percentile of the last 3 years; VIX is <b>${v.vix}</b>. In futures, asset managers' net long in S&P E-mini is <b>${v.es}</b>% of open interest (<b>${v.esP}</b>th percentile of 3 years), leveraged funds <b>${v.lev}</b>%.`,
+      take: (v) => `As of <b>${v.date}</b>, Fed net liquidity is <b>${v.net}</b> $bn, ${v.n13} versus 13 weeks ago; the high-yield spread is <b>${v.hy}</b>%, at the <b>${v.hyP}</b>th percentile of the last 3 years; VIX is <b>${v.vix}</b>; the SOFR − IORB funding spread is <b>${v.sofr}</b> bp. In futures, asset managers' net long in S&P E-mini is <b>${v.es}</b>% of open interest (<b>${v.esP}</b>th percentile of 3 years), leveraged funds <b>${v.lev}</b>%.`,
       subNet: (a, b) => `vs 13 weeks ago ${a} · vs 52 weeks ago ${b}`,
       subHy: (a, p) => `4-week change ${a} pp · ${p}th percentile of 3 yrs`,
       subVix: (a, p) => `4-week change ${a} · ${p}th percentile of 3 yrs`,
@@ -322,7 +338,7 @@ footer{font-size:13.5px;color:var(--color-fg-muted);text-align:center;padding:va
     document.querySelectorAll('.chart').forEach((el) => { const p = document.createElement('div'); p.className = 'fail'; p.textContent = t('fail'); el.replaceChildren(p); });
     return;
   }
-  const LIQ = liqRaw.map((r) => ({ date: r.date, d: pd(r.date), fed: n(r.fed_assets_bn), tga: n(r.tga_bn), rrp: n(r.rrp_bn), net: n(r.net_liq_bn), hy: n(r.hy_oas), nfci: n(r.nfci), vix: n(r.vix), spx: n(r.spx), ndx: n(r.ndx) }));
+  const LIQ = liqRaw.map((r) => ({ date: r.date, d: pd(r.date), fed: n(r.fed_assets_bn), tga: n(r.tga_bn), rrp: n(r.rrp_bn), net: n(r.net_liq_bn), hy: n(r.hy_oas), nfci: n(r.nfci), vix: n(r.vix), spx: n(r.spx), ndx: n(r.ndx), sofr: n(r.sofr_iorb_bp), sofr_max: n(r.sofr_iorb_max_bp) }));
   const COT = cotRaw.map((r) => ({ date: r.date, d: pd(r.date), es_am: n(r.es_am_pct), es_lev: n(r.es_lev_pct), nq_am: n(r.nq_am_pct), nq_lev: n(r.nq_lev_pct) }));
 
   // ---------- latest readings, percentiles and correlation ----------
@@ -338,6 +354,7 @@ footer{font-size:13.5px;color:var(--color-fg-muted);text-align:center;padding:va
     hy: LIQ[i].hy, hy_chg4: dif('hy', 4), hy_pct3y: pct(LIQ, 'hy', i),
     vix: LIQ[i].vix, vix_chg4: dif('vix', 4), vix_pct3y: pct(LIQ, 'vix', i),
     nfci: LIQ[i].nfci, nfci_chg4: dif('nfci', 4),
+    sofr: LIQ[i].sofr, sofr_max: LIQ[i].sofr_max, sofr_chg4: dif('sofr', 4), sofr_pct3y: pct(LIQ, 'sofr', i),
     cot_date: COT[j].date, es_am: COT[j].es_am, es_am_pct3y: pct(COT, 'es_am', j), es_lev: COT[j].es_lev, es_lev_pct3y: pct(COT, 'es_lev', j),
     nq_am: COT[j].nq_am, nq_am_pct3y: pct(COT, 'nq_am', j), nq_lev: COT[j].nq_lev
   };
@@ -447,7 +464,7 @@ footer{font-size:13.5px;color:var(--color-fg-muted);text-align:center;padding:va
   }
 
   // ---------- text ----------
-  const FMT = { net_liq: f(',.0f'), hy: f('.2f'), vix: f('.1f'), nfci: f('.3f'), es_am: f('.1f') };
+  const FMT = { net_liq: f(',.0f'), hy: f('.2f'), vix: f('.1f'), nfci: f('.3f'), es_am: f('.1f'), sofr: f('+.1f') };
   function drawText() {
     document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
     document.title = t('title');
@@ -456,12 +473,13 @@ footer{font-size:13.5px;color:var(--color-fg-muted);text-align:center;padding:va
     document.querySelectorAll('[data-f]').forEach((e) => { const v = LT[e.dataset.f]; e.textContent = v == null ? '—' : FMT[e.dataset.f](v); });
     document.getElementById('take').innerHTML = t('take')({
       date: LT.date, net: f(',.0f')(LT.net_liq), n13: `<b>${toneF(LT.net_chg13, 1, ',.0f')}</b>`, hy: f('.2f')(LT.hy), hyP: LT.hy_pct3y,
-      vix: f('.1f')(LT.vix), es: f('.1f')(LT.es_am), esP: LT.es_am_pct3y, lev: f('.1f')(LT.es_lev)
+      vix: f('.1f')(LT.vix), sofr: f('+.1f')(LT.sofr), es: f('.1f')(LT.es_am), esP: LT.es_am_pct3y, lev: f('.1f')(LT.es_lev)
     });
     document.getElementById('sub-net').innerHTML = t('subNet')(toneF(LT.net_chg13, 1, ',.0f'), toneF(LT.net_chg52, 1, ',.0f'));
     document.getElementById('sub-hy').innerHTML = t('subHy')(toneF(LT.hy_chg4, -1, '.2f'), LT.hy_pct3y);
     document.getElementById('sub-vix').innerHTML = t('subVix')(toneF(LT.vix_chg4, -1, '.1f'), LT.vix_pct3y);
     document.getElementById('sub-nfci').innerHTML = t('subNfci')(toneF(LT.nfci_chg4, -1, '.3f'));
+    document.getElementById('sub-sofr').innerHTML = t('subSofr')(f('+.1f')(LT.sofr_max), toneF(LT.sofr_chg4, -1, '.1f'), LT.sofr_pct3y);
     document.getElementById('sub-cot').textContent = t('subCot')(LT.es_am_pct3y, LT.cot_date);
     const r2 = (k) => f('.2f')(CORR[k]);
     document.getElementById('note-sc').innerHTML = t('sc')({ spx_all: r2('spx_all'), spx_2021: r2('spx_2021'), ndx_all: r2('ndx_all'), ndx_2021: r2('ndx_2021') });
@@ -481,7 +499,7 @@ footer{font-size:13.5px;color:var(--color-fg-muted);text-align:center;padding:va
     document.getElementById('m-upd').textContent = upd;
     const tb = document.getElementById('tbl'); tb.replaceChildren();
     // [列, 数值格式, 变化格式, 变化方向: 1 上升为好, -1 上升为坏, 0 不着色, 'pct' 显示百分比]
-    const cols = [['net', ',.0f', '+,.0f', 1], ['fed', ',.0f', '+,.0f', 1], ['tga', ',.0f', '+,.0f', -1], ['rrp', ',.0f', '+,.0f', -1], ['hy', '.2f', '+.2f', -1], ['nfci', '.3f', '+.3f', -1], ['vix', '.1f', '+.1f', -1], ['spx', ',.0f', 'pct', 1], ['ndx', ',.0f', 'pct', 1]];
+    const cols = [['net', ',.0f', '+,.0f', 1], ['fed', ',.0f', '+,.0f', 1], ['tga', ',.0f', '+,.0f', -1], ['rrp', ',.0f', '+,.0f', -1], ['hy', '.2f', '+.2f', -1], ['nfci', '.3f', '+.3f', -1], ['sofr', '.1f', '+.1f', -1], ['vix', '.1f', '+.1f', -1], ['spx', ',.0f', 'pct', 1], ['ndx', ',.0f', 'pct', 1]];
     const N = LIQ.length;
     for (let q = N - 1; q >= Math.max(1, N - 12); q--) {
       const r = LIQ[q], pr = LIQ[q - 1];
@@ -494,7 +512,9 @@ footer{font-size:13.5px;color:var(--color-fg-muted);text-align:center;padding:va
           const ch = cf === 'pct' ? 100 * (v / pv - 1) : v - pv;
           const sc = document.createElement('span');
           sc.className = 'c' + (ch * good > 0 ? ' good' : ch * good < 0 ? ' bad' : '');
-          sc.textContent = cf === 'pct' ? f('+.1f')(ch) + '%' : f(cf)(ch);
+          let txt = cf === 'pct' ? f('+.1f')(ch) : f(cf)(ch);
+          if (/^-0(\.0+)?$/.test(txt)) { txt = '+' + txt.slice(1); sc.className = 'c'; }
+          sc.textContent = cf === 'pct' ? txt + '%' : txt;
           td.append(sc);
         }
         tr.append(td);
@@ -617,10 +637,17 @@ footer{font-size:13.5px;color:var(--color-fg-muted);text-align:center;padding:va
       .on('pointerleave', () => { ring.style('display', 'none'); hideTip(fr); });
   }
 
-  const ALL = [cMain, cDecomp, cScatter, cHy, cVix, cCot];
+  function cSofr() {
+    lines(document.getElementById('chart-sofr'), {
+      rows: cut(LIQ).filter((r) => r.sofr != null), height: 300, zero: true, aria: t('hSofr'),
+      left: [{ key: 'sofr', label: t('lSofrAvg'), color: C(0), fmt: (v) => f('+.1f')(v) + ' ' + t('bp') }, { key: 'sofr_max', label: t('lSofrMax'), color: C(1), fmt: (v) => f('+.1f')(v) + ' ' + t('bp') }],
+      fmtL: f('.0f')
+    });
+  }
+  const ALL = [cMain, cDecomp, cScatter, cSofr, cHy, cVix, cCot];
   const drawAll = () => ALL.forEach((fn) => fn());
   document.querySelectorAll('[data-idx]').forEach((b) => b.addEventListener('click', () => { if (S.idx === b.dataset.idx) return; S.idx = b.dataset.idx; drawText(); cMain(); cScatter(); cCot(); }));
-  document.querySelectorAll('[data-range]').forEach((b) => b.addEventListener('click', () => { if (S.range === +b.dataset.range) return; S.range = +b.dataset.range; drawText(); cMain(); cDecomp(); cHy(); cVix(); cCot(); }));
+  document.querySelectorAll('[data-range]').forEach((b) => b.addEventListener('click', () => { if (S.range === +b.dataset.range) return; S.range = +b.dataset.range; drawText(); cMain(); cDecomp(); cSofr(); cHy(); cVix(); cCot(); }));
   document.querySelectorAll('[data-lang]').forEach((b) => b.addEventListener('click', () => {
     if (lang === b.dataset.lang) return;
     lang = b.dataset.lang; try { localStorage.setItem('usl-lang', lang); } catch (e) {}
